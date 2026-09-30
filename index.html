@@ -6,6 +6,7 @@
     <title>Advanced Cutting Optimizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -51,10 +52,12 @@
             max-width: 1200px;
             margin: 2rem auto;
             padding: 2rem;
-            background-color: var(--panel);
+            background-color: rgba(16, 30, 43, 0.8);
             border: 1px solid var(--border-soft);
             border-radius: 6px;
             box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+            position: relative;
+            z-index: 1;
         }
         label {
             font-weight: 500;
@@ -375,6 +378,20 @@
         .lp-legend th, .lp-legend td { padding: 0.35rem 0.75rem; text-align: left; border: 1px solid var(--border-soft); }
         .lp-swatch { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 2px; margin-right: 0.5rem; vertical-align: -1px; border: 1px solid rgba(255,255,255,0.35); }
 
+        /* Background watermark: an original steel lattice-tower illustration
+           (not a photo), fixed behind all content at 50% opacity. */
+        .tower-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.6;
+            background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20640%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23BFD3E6%22%20stroke-width%3D%222.2%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%2230.0%22%20y1%3D%22620.0%22%20x2%3D%22142.0%22%20y2%3D%22150.0%22/%3E%3Cline%20x1%3D%22290.0%22%20y1%3D%22620.0%22%20x2%3D%22178.0%22%20y2%3D%22150.0%22/%3E%3Cline%20x1%3D%22142.0%22%20y1%3D%22150.0%22%20x2%3D%22142.0%22%20y2%3D%2290.0%22/%3E%3Cline%20x1%3D%22178.0%22%20y1%3D%22150.0%22%20x2%3D%22178.0%22%20y2%3D%2290.0%22/%3E%3Cline%20x1%3D%22160.0%22%20y1%3D%2290.0%22%20x2%3D%22160.0%22%20y2%3D%2240.0%22/%3E%3Cline%20x1%3D%2230.0%22%20y1%3D%22620.0%22%20x2%3D%22274.0%22%20y2%3D%22552.9%22/%3E%3Cline%20x1%3D%22290.0%22%20y1%3D%22620.0%22%20x2%3D%2246.0%22%20y2%3D%22552.9%22/%3E%3Cline%20x1%3D%2230.0%22%20y1%3D%22620.0%22%20x2%3D%22290.0%22%20y2%3D%22620.0%22/%3E%3Cline%20x1%3D%2246.0%22%20y1%3D%22552.9%22%20x2%3D%22258.0%22%20y2%3D%22485.7%22/%3E%3Cline%20x1%3D%22274.0%22%20y1%3D%22552.9%22%20x2%3D%2262.0%22%20y2%3D%22485.7%22/%3E%3Cline%20x1%3D%2246.0%22%20y1%3D%22552.9%22%20x2%3D%22274.0%22%20y2%3D%22552.9%22/%3E%3Cline%20x1%3D%2262.0%22%20y1%3D%22485.7%22%20x2%3D%22242.0%22%20y2%3D%22418.6%22/%3E%3Cline%20x1%3D%22258.0%22%20y1%3D%22485.7%22%20x2%3D%2278.0%22%20y2%3D%22418.6%22/%3E%3Cline%20x1%3D%2262.0%22%20y1%3D%22485.7%22%20x2%3D%22258.0%22%20y2%3D%22485.7%22/%3E%3Cline%20x1%3D%2278.0%22%20y1%3D%22418.6%22%20x2%3D%22226.0%22%20y2%3D%22351.4%22/%3E%3Cline%20x1%3D%22242.0%22%20y1%3D%22418.6%22%20x2%3D%2294.0%22%20y2%3D%22351.4%22/%3E%3Cline%20x1%3D%2278.0%22%20y1%3D%22418.6%22%20x2%3D%22242.0%22%20y2%3D%22418.6%22/%3E%3Cline%20x1%3D%2294.0%22%20y1%3D%22351.4%22%20x2%3D%22210.0%22%20y2%3D%22284.3%22/%3E%3Cline%20x1%3D%22226.0%22%20y1%3D%22351.4%22%20x2%3D%22110.0%22%20y2%3D%22284.3%22/%3E%3Cline%20x1%3D%2294.0%22%20y1%3D%22351.4%22%20x2%3D%22226.0%22%20y2%3D%22351.4%22/%3E%3Cline%20x1%3D%22110.0%22%20y1%3D%22284.3%22%20x2%3D%22194.0%22%20y2%3D%22217.1%22/%3E%3Cline%20x1%3D%22210.0%22%20y1%3D%22284.3%22%20x2%3D%22126.0%22%20y2%3D%22217.1%22/%3E%3Cline%20x1%3D%22110.0%22%20y1%3D%22284.3%22%20x2%3D%22210.0%22%20y2%3D%22284.3%22/%3E%3Cline%20x1%3D%22126.0%22%20y1%3D%22217.1%22%20x2%3D%22178.0%22%20y2%3D%22150.0%22/%3E%3Cline%20x1%3D%22194.0%22%20y1%3D%22217.1%22%20x2%3D%22142.0%22%20y2%3D%22150.0%22/%3E%3Cline%20x1%3D%22126.0%22%20y1%3D%22217.1%22%20x2%3D%22194.0%22%20y2%3D%22217.1%22/%3E%3Cline%20x1%3D%22142.0%22%20y1%3D%22150.0%22%20x2%3D%22178.0%22%20y2%3D%22150.0%22/%3E%3Cline%20x1%3D%22142.0%22%20y1%3D%22150.0%22%20x2%3D%22178.0%22%20y2%3D%22120.0%22/%3E%3Cline%20x1%3D%22178.0%22%20y1%3D%22150.0%22%20x2%3D%22142.0%22%20y2%3D%22120.0%22/%3E%3Cline%20x1%3D%22142.0%22%20y1%3D%22120.0%22%20x2%3D%22178.0%22%20y2%3D%2290.0%22/%3E%3Cline%20x1%3D%22178.0%22%20y1%3D%22120.0%22%20x2%3D%22142.0%22%20y2%3D%2290.0%22/%3E%3Cline%20x1%3D%2265.0%22%20y1%3D%22120.0%22%20x2%3D%22255.0%22%20y2%3D%22120.0%22/%3E%3Cline%20x1%3D%2265.0%22%20y1%3D%22120.0%22%20x2%3D%22142.0%22%20y2%3D%22140.0%22/%3E%3Cline%20x1%3D%22255.0%22%20y1%3D%22120.0%22%20x2%3D%22178.0%22%20y2%3D%22140.0%22/%3E%3Cline%20x1%3D%2265.0%22%20y1%3D%22106.0%22%20x2%3D%2265.0%22%20y2%3D%22134.0%22/%3E%3Cline%20x1%3D%22255.0%22%20y1%3D%22106.0%22%20x2%3D%22255.0%22%20y2%3D%22134.0%22/%3E%3Cline%20x1%3D%2265.0%22%20y1%3D%22120.0%22%20x2%3D%2265.0%22%20y2%3D%22142.0%22/%3E%3Cline%20x1%3D%22112.5%22%20y1%3D%22120.0%22%20x2%3D%22112.5%22%20y2%3D%22142.0%22/%3E%3Cline%20x1%3D%22160.0%22%20y1%3D%22120.0%22%20x2%3D%22160.0%22%20y2%3D%22142.0%22/%3E%3Cline%20x1%3D%22207.5%22%20y1%3D%22120.0%22%20x2%3D%22207.5%22%20y2%3D%22142.0%22/%3E%3Cline%20x1%3D%22255.0%22%20y1%3D%22120.0%22%20x2%3D%22255.0%22%20y2%3D%22142.0%22/%3E%3C/g%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: min(70vw, 55vh) auto;
+        }
+
         /* Recurring diagonal light wash, top-left to bottom-right, every 3s.
            A wide soft-edged band that spans the whole viewport as it
            crosses, so the sweep reads as covering the full screen rather
@@ -400,7 +417,7 @@
             background-size: 300vmax 300vmax;
             background-repeat: no-repeat;
             background-position: -150vmax -150vmax;
-            animation: sheen-sweep 20s linear infinite;
+            animation: sheen-sweep 50s linear infinite;
             will-change: background-position;
         }
         @keyframes sheen-sweep {
@@ -429,7 +446,7 @@
             border-color: var(--border) !important;
         }
         .summary-card {
-            transition: border-color 0.50s ease, transform 0.50s ease;
+            transition: border-color 0.15s ease, transform 0.15s ease;
         }
         .summary-card:hover {
             border-color: var(--accent);
@@ -471,6 +488,7 @@
 </style>
 </head>
 <body id="app-body" class="mode-angle">
+    <div class="tower-backdrop" aria-hidden="true"></div>
     <div class="container">
         <header>
             <div class="version-switcher">
@@ -529,13 +547,13 @@
                 <div class="bg-gray-50 p-4 rounded-lg bg-gray-800">
                     <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2" id="required-h2">2. Required Cut Pieces</h2>
                     <label for="bulk-cut-pieces-input" class="text-sm" id="required-label">Paste data here (space or tab-separated):</label>
-                    <textarea id="bulk-cut-pieces-input" rows="6" class="w-full mt-2" placeholder="Angle Example: (Size Length MarkNo Qty Operation)&#10;50x50x5 1200 MK-001 10 Drilling&#10;50x50x5 800 MK-002 15 Bending&#10;&#10;"></textarea>
+                    <textarea id="bulk-cut-pieces-input" rows="6" class="w-full mt-2" placeholder="Angle Example: (Size Length MarkNo Qty Operation)&#10;50x50x5 1200 MK-001 10 Drilling&#10;50x50x5 800 MK-002 15 Bending&#10;&#10;Plate Example: (Thickness Width Length MarkNo Qty Operation)&#10;10 200 500 PC-101 5 Plasma"></textarea>
                     <p id="free-version-limit" class="text-sm text-red-400 mt-2 hidden">Free version is limited to a maximum of 5 required pieces. Please upgrade to the paid version.</p>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg bg-gray-800">
                     <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2" id="stock-h2">3. Available Stock Angles</h2>
                     <label for="bulk-stock-angles-input" class="text-sm" id="stock-label">Paste data here (space or tab-separated):</label>
-                    <textarea id="bulk-stock-angles-input" rows="6" class="w-full mt-2" placeholder="Angle Example: (Size Length Qty)&#10;50x50x5 6000 5&#10;75x75x6 6000 10&#10;&#10;"></textarea>
+                    <textarea id="bulk-stock-angles-input" rows="6" class="w-full mt-2" placeholder="Angle Example: (Size Length Qty)&#10;50x50x5 6000 5&#10;75x75x6 6000 10&#10;&#10;Plate Example: (Thickness Width Length Qty)&#10;10 1500 6000 2"></textarea>
                 </div>
             </div>
         </div>
@@ -594,6 +612,7 @@
                 <div class="flex justify-between items-center flex-wrap gap-4">
                     <h2 class="text-2xl font-bold">Cutting layouts</h2>
                     <button id="print-layouts-btn" class="btn btn-primary no-print">Print layouts</button>
+                    <button id="download-layouts-pdf-btn" class="btn btn-primary no-print">Download layouts PDF</button>
                 </div>
                 <p class="lp-note">One drawing per distinct plate layout; "x 3" means three identical plates. The long side of each plate runs left to right. Sizes are width x length as entered. R marks a part turned 90 degrees. Hover a part for its position.</p>
                 <div id="layout-list"></div>
@@ -1435,6 +1454,7 @@
             
 // Core optimization logic
             let unmetDemand = [];
+            let lastPlateLayoutStock = null;
             let stockSizeList = [];
 
             function repairUnmet(stockList, size, kerf, trim) {
@@ -2011,16 +2031,10 @@
             // --- END 1D ANGLE OPTIMIZATION FUNCTIONS ---
 
 
-            function renderPlateLayouts(usedStock, mode) {
-                const section = document.getElementById('layout-section');
-                const list = document.getElementById('layout-list');
-                list.innerHTML = '';
-                if (mode !== 'plate' || !usedStock || usedStock.length === 0) { section.classList.add('hidden'); return; }
-
-                const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                const fmt = n => Number.isInteger(n) ? String(n) : String(+Number(n).toFixed(2));
-
-                // one drawing per distinct geometry (identical plates are counted, not repeated)
+            // Shared by the on-screen SVG layouts and the PDF export, so both
+            // always show the exact same grouping of identical plates and the
+            // exact same colour per mark number.
+            function computePlateLayoutGroups(usedStock) {
                 const groups = new Map();
                 usedStock.forEach(st => {
                     const sig = st.thickness + '|' + st.originalWidth + 'x' + st.originalLength + '|' + st.cutsMade
@@ -2031,11 +2045,35 @@
                 const ordered = Array.from(groups.values()).sort((a, b) =>
                     (parseFloat(a.stock.thickness) - parseFloat(b.stock.thickness)) ||
                     (b.stock.area - a.stock.area) || (b.qty - a.qty));
-
-                // stable colour per mark number
                 const marks = Array.from(new Set(usedStock.flatMap(st => st.cutsMade.map(c => c.markNo))))
                     .sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
                 const hueOf = new Map(marks.map((m, i) => [m, Math.round((i * 137.508 + 200) % 360)]));
+                return { ordered, hueOf };
+            }
+            function plateLegendRows(cutsMade, fmt) {
+                const legend = new Map();
+                cutsMade.forEach(c => {
+                    const key = `${c.markNo}|${fmt(c.width)}x${fmt(c.length)}|${c.operation || ''}`;
+                    const e = legend.get(key) || { mark: c.markNo, dims: `${fmt(c.width)} x ${fmt(c.length)}`, op: c.operation || '', qty: 0, turned: 0 };
+                    e.qty++; if (c.isRotated) e.turned++;
+                    legend.set(key, e);
+                });
+                return Array.from(legend.values()).sort((a, b) => String(a.mark).localeCompare(String(b.mark), undefined, { numeric: true }));
+            }
+
+            function renderPlateLayouts(usedStock, mode) {
+                const section = document.getElementById('layout-section');
+                const list = document.getElementById('layout-list');
+                list.innerHTML = '';
+                lastPlateLayoutStock = (mode === 'plate' && usedStock && usedStock.length) ? usedStock : null;
+                document.getElementById('download-layouts-pdf-btn').classList.toggle('hidden', !lastPlateLayoutStock);
+                if (mode !== 'plate' || !usedStock || usedStock.length === 0) { section.classList.add('hidden'); return; }
+
+                const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                const fmt = n => Number.isInteger(n) ? String(n) : String(+Number(n).toFixed(2));
+
+                // one drawing per distinct geometry (identical plates are counted, not repeated)
+                const { ordered, hueOf } = computePlateLayoutGroups(usedStock);
 
                 ordered.forEach((g, gi) => {
                     const st = g.stock, W = st.originalWidth, L = st.originalLength;
@@ -2085,14 +2123,7 @@
                     });
 
                     // legend: every mark on this plate with its size and count
-                    const legend = new Map();
-                    st.cutsMade.forEach(c => {
-                        const key = `${c.markNo}|${fmt(c.width)}x${fmt(c.length)}|${c.operation || ''}`;
-                        const e = legend.get(key) || { mark: c.markNo, dims: `${fmt(c.width)} x ${fmt(c.length)}`, op: c.operation || '', qty: 0, turned: 0 };
-                        e.qty++; if (c.isRotated) e.turned++;
-                        legend.set(key, e);
-                    });
-                    const rows = Array.from(legend.values()).sort((a, b) => String(a.mark).localeCompare(String(b.mark), undefined, { numeric: true }))
+                    const rows = plateLegendRows(st.cutsMade, fmt)
                         .map(e => `<tr><td><span class="lp-swatch" style="background:hsl(${hueOf.get(e.mark)} 50% 32%)"></span>${esc(e.mark)}</td><td>${esc(e.dims)}</td><td>${e.qty}</td><td>${e.turned ? e.turned + ' turned' : ''}</td><td>${esc(e.op)}</td></tr>`).join('');
 
                     const usedPct = (st.usedArea / st.area * 100).toFixed(1);
@@ -2107,6 +2138,112 @@
                 });
                 section.classList.remove('hidden');
             }
+
+            // One PDF, one page per distinct plate layout, using the exact same
+            // grouping/colours/legend data as the on-screen drawings above.
+            function generateLayoutsPDF(usedStock) {
+                const { jsPDF } = window.jspdf;
+                const fmt = n => Number.isInteger(n) ? String(n) : String(+Number(n).toFixed(2));
+                const hsl2rgb = (h, s, l) => {
+                    s /= 100; l /= 100;
+                    const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
+                    let r, g, b;
+                    if (h < 60) [r, g, b] = [c, x, 0]; else if (h < 120) [r, g, b] = [x, c, 0]; else if (h < 180) [r, g, b] = [0, c, x];
+                    else if (h < 240) [r, g, b] = [0, x, c]; else if (h < 300) [r, g, b] = [x, 0, c]; else [r, g, b] = [c, 0, x];
+                    return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+                };
+                const { ordered, hueOf } = computePlateLayoutGroups(usedStock);
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+                const pageW = doc.internal.pageSize.getWidth(), pageH = doc.internal.pageSize.getHeight();
+                const marginX = 15, marginTop = 25, legendTop = 25, rowH = 4.6, legendColW = 65;
+                const maxLegendCols = Math.max(1, Math.floor((pageW - 2 * marginX) / legendColW));
+
+                ordered.forEach((g, gi) => {
+                    if (gi > 0) doc.addPage();
+                    const st = g.stock, Wd = st.originalWidth, L = st.originalLength;
+                    const horiz = L >= Wd;
+                    const PW = horiz ? L : Wd, PH = horiz ? Wd : L;
+                    const rows = plateLegendRows(st.cutsMade, fmt);
+
+                    let legendCols = 1;
+                    while (legendCols < maxLegendCols && Math.ceil(rows.length / legendCols) * rowH > 60) legendCols++;
+                    const legendRowsPerCol = Math.ceil(rows.length / legendCols) || 1;
+                    const legendH = 10 + legendRowsPerCol * rowH;
+                    const maxLegendH = pageH - legendTop - 12;
+
+                    doc.setFontSize(13); doc.setFont(undefined, 'bold');
+                    doc.text(`${fmt(Wd)} x ${fmt(L)} mm  (thickness ${st.thickness})`, marginX, 15);
+                    doc.setFont(undefined, 'normal'); doc.setFontSize(10);
+                    doc.text(`${g.qty > 1 ? 'x ' + g.qty + ' plates' : '1 plate'}   |   ${st.cutsMade.length} parts   |   ${(st.usedArea / st.area * 100).toFixed(1)}% used`, marginX, 21);
+
+                    const drawingBottom = pageH - Math.min(legendH, maxLegendH) - 6;
+                    const usableW = pageW - marginX * 2, usableH = drawingBottom - marginTop;
+                    const scale = Math.min(usableW / PW, usableH / PH);
+                    const drawW = PW * scale, drawH = PH * scale;
+                    const ox = marginX + (usableW - drawW) / 2, oy = marginTop + (usableH - drawH) / 2;
+
+                    doc.setDrawColor(97, 223, 251); doc.setLineWidth(0.4);
+                    doc.rect(ox, oy, drawW, drawH);
+
+                    st.cutsMade.forEach(c => {
+                        const pw = c.isRotated ? c.length : c.width, ph = c.isRotated ? c.width : c.length;
+                        const bw = horiz ? ph : pw, bh = horiz ? pw : ph;
+                        const u = horiz ? c.y : c.x, v = horiz ? c.x : c.y;
+                        const rx = ox + u * scale, ry = oy + v * scale, rw = bw * scale, rh = bh * scale;
+                        const [r, gg, b] = hsl2rgb(hueOf.get(c.markNo), 45, 30);
+                        doc.setFillColor(r, gg, b); doc.setDrawColor(230, 230, 230); doc.setLineWidth(0.2);
+                        doc.rect(rx, ry, rw, rh, 'FD');
+                        const label = String(c.markNo);
+                        const fs = Math.max(5, Math.min(9, Math.min(rw, rh) / 3.2));
+                        if (Math.min(rw, rh) > 4) {
+                            doc.setTextColor(255, 255, 255); doc.setFontSize(fs);
+                            doc.text(label, rx + rw / 2, ry + rh / 2, { align: 'center', baseline: 'middle', maxWidth: rw - 1 });
+                        }
+                    });
+                    doc.setTextColor(0, 0, 0);
+
+                    let ly = pageH - Math.min(legendH, maxLegendH) + 6;
+                    const colWidth = (pageW - 2 * marginX) / legendCols;
+                    const drawLegendHeader = (y) => {
+                        doc.setFontSize(9); doc.setFont(undefined, 'bold');
+                        for (let c = 0; c < legendCols; c++) { const cx = marginX + c * colWidth; doc.text('Mark no.', cx, y); doc.text('Size', cx + 30, y); doc.text('Qty', cx + 52, y); doc.text('Op.', cx + 60, y); }
+                        doc.setFont(undefined, 'normal');
+                        doc.setLineWidth(0.1); doc.line(marginX, y + 1.5, pageW - marginX, y + 1.5);
+                    };
+                    drawLegendHeader(ly); ly += 5;
+                    const rowsThatFit = Math.floor((pageH - 6 - ly) / rowH) * legendCols;
+                    rows.slice(0, rowsThatFit).forEach((e, i) => {
+                        const col = Math.floor(i / legendRowsPerCol), cx = marginX + col * colWidth;
+                        const cy = ly + (i % legendRowsPerCol) * rowH;
+                        doc.text(String(e.mark), cx, cy);
+                        doc.text(e.dims, cx + 30, cy);
+                        doc.text(String(e.qty) + (e.turned ? `(${e.turned}R)` : ''), cx + 52, cy);
+                        doc.text(e.op || '-', cx + 60, cy, { maxWidth: colWidth - 60 });
+                    });
+                    if (rows.length > rowsThatFit) {
+                        doc.addPage();
+                        doc.setFontSize(11); doc.setFont(undefined, 'bold');
+                        doc.text(`${fmt(Wd)} x ${fmt(L)} mm (thickness ${st.thickness}) — legend (continued)`, marginX, 15);
+                        let cy2 = 25; drawLegendHeader(cy2); cy2 += 5;
+                        rows.slice(rowsThatFit).forEach((e, i) => {
+                            const y = cy2 + i * rowH;
+                            doc.text(String(e.mark), marginX, y); doc.text(e.dims, marginX + 30, y);
+                            doc.text(String(e.qty) + (e.turned ? `(${e.turned}R)` : ''), marginX + 52, y);
+                            doc.text(e.op || '-', marginX + 60, y);
+                        });
+                    }
+                });
+                return doc;
+            }
+
+            document.getElementById('download-layouts-pdf-btn').addEventListener('click', () => {
+                if (!lastPlateLayoutStock) return;
+                try {
+                    generateLayoutsPDF(lastPlateLayoutStock).save('PlateCuttingLayouts.pdf');
+                } catch (e) {
+                    showMessageBox('Error', 'Could not generate the layouts PDF: ' + e.message);
+                }
+            });
 
             function displayResults(usedStock, unmetDemand, totalStockMetric, totalWasteMetric, totalMaterialUsedMetric, mode) {
                 const tbody = document.querySelector('#optimization-results tbody');
