@@ -111,6 +111,13 @@
             .ring-arc { animation: none; }
         }
 
+        /* Compact top row: the three boxes are a little shorter so the buttons below move up. */
+        .params-grid .bg-gray-800 { padding: 0.7rem 0.9rem; }
+        .params-grid h2 { font-size: 1.1rem; margin-bottom: 0.6rem; padding-bottom: 0.35rem; }
+        .params-grid label { margin-bottom: 0.2rem; font-size: 0.9rem; }
+        .params-grid input[type="number"], .params-grid select { padding: 0.4rem 0.75rem; font-size: 0.95rem; }
+        .params-grid textarea { padding: 0.5rem 0.75rem; }
+        .params-grid .angle-params > div + div { margin-top: 0.45rem; }
         /* Top row: the three boxes sit side by side at 20% / 40% / 40% of the
            width left after the two gaps. The wrapper around boxes 2 and 3
            becomes display: contents so all three boxes are direct grid items. */
@@ -164,6 +171,26 @@
             color: var(--accent-text);
             border: none;
         }
+        .btn-deep {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+        .btn-deep:hover:not(:disabled) { background: rgba(240, 169, 59, 0.12); }
+        .btn-deep.running { background: rgba(226, 88, 63, 0.15); color: #ffb3a4; border-color: var(--danger); }
+        .mode-plate #deep-search-btn { display: none; }
+        #bound-info {
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            background: var(--panel-2);
+            border-radius: 5px;
+            padding: 0.7rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.92rem;
+            color: var(--text-dim);
+        }
+        #bound-info b { color: var(--text); }
+        #bound-info.optimal { border-left-color: var(--success); }
         .btn-primary:hover:not(:disabled) {
             background-color: var(--accent-dark);
             transform: translateY(-1px);
@@ -397,7 +424,7 @@
         }
         #angle-optimization-btn:hover, #plate-optimization-btn:hover,
         #free-version-btn:hover, #paid-version-btn:hover {
-            transform: rotate(15deg);
+            transform: rotate(180deg);
         }
         .version-switcher button:not(.active):hover {
             background-color: var(--panel-3) !important;
@@ -525,7 +552,7 @@
             stroke: #9FE7FF;
             stroke-dasharray: 12 88;
             opacity: 0.9;
-            animation: tower-spark-flow 1.6s linear infinite;
+            animation: tower-spark-flow 3s linear infinite;
             filter: drop-shadow(0 0 2px #9FE7FF) drop-shadow(0 0 4px rgba(159, 231, 255, 0.6));
         }
         @keyframes tower-spark-flow {
@@ -608,10 +635,10 @@
 </g>
 </defs>
 <g class="tower-wire-base" fill="none" stroke-width="1.4">
-<path d="M -20.0 116.0 Q 62.5 132.8 145.0 120.0"/><path d="M -20.0 116.0 Q 157.5 149.9 335.0 120.0"/><path d="M 145.0 120.0 Q 351.5 187.8 558.1 181.2"/><path d="M 335.0 120.0 Q 509.2 182.0 683.5 181.2"/><path d="M 558.1 181.2 Q 694.4 225.9 830.7 221.6"/><path d="M 683.5 181.2 Q 798.5 222.1 913.5 221.6"/><path d="M 830.7 221.6 Q 920.7 251.1 1010.7 248.3"/><path d="M 913.5 221.6 Q 989.4 248.6 1065.3 248.3"/><path d="M 1010.7 248.3 Q 1070.1 267.7 1129.5 265.8"/><path d="M 1065.3 248.3 Q 1115.4 266.1 1165.5 265.8"/><path d="M 1129.5 265.8 Q 1168.6 278.7 1207.8 277.5"/><path d="M 1165.5 265.8 Q 1198.6 277.6 1231.6 277.5"/><path d="M 1207.8 277.5 Q 1233.7 285.9 1259.6 285.1"/><path d="M 1231.6 277.5 Q 1253.5 285.3 1275.3 285.1"/><path d="M 1259.6 285.1 Q 1276.6 291.7 1293.7 290.2"/><path d="M 1275.3 285.1 Q 1289.7 291.7 1304.1 290.2"/><path d="M 1293.7 290.2 Q 1305.0 295.8 1316.3 293.5"/><path d="M 1304.1 290.2 Q 1313.6 295.8 1323.1 293.5"/>
+<path d="M -20.0 116.0 Q 62.5 136.5 145.0 120.0"/><path d="M -20.0 116.0 Q 157.5 157.9 335.0 120.0"/><path d="M 145.0 120.0 Q 351.5 197.1 558.1 181.2"/><path d="M 335.0 120.0 Q 509.2 189.8 683.5 181.2"/><path d="M 558.1 181.2 Q 694.4 232.0 830.7 221.6"/><path d="M 683.5 181.2 Q 798.5 227.3 913.5 221.6"/><path d="M 830.7 221.6 Q 920.7 255.1 1010.7 248.3"/><path d="M 913.5 221.6 Q 989.4 252.0 1065.3 248.3"/><path d="M 1010.7 248.3 Q 1070.1 270.4 1129.5 265.8"/><path d="M 1065.3 248.3 Q 1115.4 268.4 1165.5 265.8"/><path d="M 1129.5 265.8 Q 1168.6 280.5 1207.8 277.5"/><path d="M 1165.5 265.8 Q 1198.6 279.1 1231.6 277.5"/><path d="M 1207.8 277.5 Q 1233.7 287.0 1259.6 285.1"/><path d="M 1231.6 277.5 Q 1253.5 286.3 1275.3 285.1"/><path d="M 1259.6 285.1 Q 1276.6 292.7 1293.7 290.2"/><path d="M 1275.3 285.1 Q 1289.7 292.7 1304.1 290.2"/><path d="M 1293.7 290.2 Q 1305.0 296.8 1316.3 293.5"/><path d="M 1304.1 290.2 Q 1313.6 296.8 1323.1 293.5"/>
 </g>
 <g class="tower-wire-glow" fill="none" stroke-width="2.2" stroke-linecap="round">
-<path class="tower-wire-spark" d="M -20.0 116.0 Q 62.5 132.8 145.0 120.0" pathLength="100" style="animation-delay:0.00s"/><path class="tower-wire-spark" d="M -20.0 116.0 Q 157.5 149.9 335.0 120.0" pathLength="100" style="animation-delay:0.00s"/><path class="tower-wire-spark" d="M 145.0 120.0 Q 351.5 187.8 558.1 181.2" pathLength="100" style="animation-delay:0.40s"/><path class="tower-wire-spark" d="M 335.0 120.0 Q 509.2 182.0 683.5 181.2" pathLength="100" style="animation-delay:0.40s"/><path class="tower-wire-spark" d="M 558.1 181.2 Q 694.4 225.9 830.7 221.6" pathLength="100" style="animation-delay:0.80s"/><path class="tower-wire-spark" d="M 683.5 181.2 Q 798.5 222.1 913.5 221.6" pathLength="100" style="animation-delay:0.80s"/><path class="tower-wire-spark" d="M 830.7 221.6 Q 920.7 251.1 1010.7 248.3" pathLength="100" style="animation-delay:1.20s"/><path class="tower-wire-spark" d="M 913.5 221.6 Q 989.4 248.6 1065.3 248.3" pathLength="100" style="animation-delay:1.20s"/><path class="tower-wire-spark" d="M 1010.7 248.3 Q 1070.1 267.7 1129.5 265.8" pathLength="100" style="animation-delay:1.60s"/><path class="tower-wire-spark" d="M 1065.3 248.3 Q 1115.4 266.1 1165.5 265.8" pathLength="100" style="animation-delay:1.60s"/><path class="tower-wire-spark" d="M 1129.5 265.8 Q 1168.6 278.7 1207.8 277.5" pathLength="100" style="animation-delay:2.00s"/><path class="tower-wire-spark" d="M 1165.5 265.8 Q 1198.6 277.6 1231.6 277.5" pathLength="100" style="animation-delay:2.00s"/><path class="tower-wire-spark" d="M 1207.8 277.5 Q 1233.7 285.9 1259.6 285.1" pathLength="100" style="animation-delay:2.40s"/><path class="tower-wire-spark" d="M 1231.6 277.5 Q 1253.5 285.3 1275.3 285.1" pathLength="100" style="animation-delay:2.40s"/><path class="tower-wire-spark" d="M 1259.6 285.1 Q 1276.6 291.7 1293.7 290.2" pathLength="100" style="animation-delay:2.80s"/><path class="tower-wire-spark" d="M 1275.3 285.1 Q 1289.7 291.7 1304.1 290.2" pathLength="100" style="animation-delay:2.80s"/><path class="tower-wire-spark" d="M 1293.7 290.2 Q 1305.0 295.8 1316.3 293.5" pathLength="100" style="animation-delay:3.20s"/><path class="tower-wire-spark" d="M 1304.1 290.2 Q 1313.6 295.8 1323.1 293.5" pathLength="100" style="animation-delay:3.20s"/>
+<path class="tower-wire-spark" d="M -20.0 116.0 Q 62.5 136.5 145.0 120.0" pathLength="100" style="animation-delay:0.00s"/><path class="tower-wire-spark" d="M -20.0 116.0 Q 157.5 157.9 335.0 120.0" pathLength="100" style="animation-delay:0.00s"/><path class="tower-wire-spark" d="M 145.0 120.0 Q 351.5 197.1 558.1 181.2" pathLength="100" style="animation-delay:0.75s"/><path class="tower-wire-spark" d="M 335.0 120.0 Q 509.2 189.8 683.5 181.2" pathLength="100" style="animation-delay:0.75s"/><path class="tower-wire-spark" d="M 558.1 181.2 Q 694.4 232.0 830.7 221.6" pathLength="100" style="animation-delay:1.50s"/><path class="tower-wire-spark" d="M 683.5 181.2 Q 798.5 227.3 913.5 221.6" pathLength="100" style="animation-delay:1.50s"/><path class="tower-wire-spark" d="M 830.7 221.6 Q 920.7 255.1 1010.7 248.3" pathLength="100" style="animation-delay:2.25s"/><path class="tower-wire-spark" d="M 913.5 221.6 Q 989.4 252.0 1065.3 248.3" pathLength="100" style="animation-delay:2.25s"/><path class="tower-wire-spark" d="M 1010.7 248.3 Q 1070.1 270.4 1129.5 265.8" pathLength="100" style="animation-delay:3.00s"/><path class="tower-wire-spark" d="M 1065.3 248.3 Q 1115.4 268.4 1165.5 265.8" pathLength="100" style="animation-delay:3.00s"/><path class="tower-wire-spark" d="M 1129.5 265.8 Q 1168.6 280.5 1207.8 277.5" pathLength="100" style="animation-delay:3.75s"/><path class="tower-wire-spark" d="M 1165.5 265.8 Q 1198.6 279.1 1231.6 277.5" pathLength="100" style="animation-delay:3.75s"/><path class="tower-wire-spark" d="M 1207.8 277.5 Q 1233.7 287.0 1259.6 285.1" pathLength="100" style="animation-delay:4.50s"/><path class="tower-wire-spark" d="M 1231.6 277.5 Q 1253.5 286.3 1275.3 285.1" pathLength="100" style="animation-delay:4.50s"/><path class="tower-wire-spark" d="M 1259.6 285.1 Q 1276.6 292.7 1293.7 290.2" pathLength="100" style="animation-delay:5.25s"/><path class="tower-wire-spark" d="M 1275.3 285.1 Q 1289.7 292.7 1304.1 290.2" pathLength="100" style="animation-delay:5.25s"/><path class="tower-wire-spark" d="M 1293.7 290.2 Q 1305.0 296.8 1316.3 293.5" pathLength="100" style="animation-delay:6.00s"/><path class="tower-wire-spark" d="M 1304.1 290.2 Q 1313.6 296.8 1323.1 293.5" pathLength="100" style="animation-delay:6.00s"/>
 </g>
 <g class="tower-all">
 <g transform="translate(80.0,0.0) scale(1.0000)"><use href="#towerBaseTpl" class="tower-base-line"/><use href="#towerSparkTpl"/></g><g transform="translate(515.2,102.0) scale(0.6600)"><use href="#towerBaseTpl" class="tower-base-line"/><use href="#towerSparkTpl"/></g><g transform="translate(802.4,169.3) scale(0.4356)"><use href="#towerBaseTpl" class="tower-base-line"/><use href="#towerSparkTpl"/></g><g transform="translate(992.0,213.8) scale(0.2875)"><use href="#towerBaseTpl" class="tower-base-line"/><use href="#towerSparkTpl"/></g><g transform="translate(1117.1,243.1) scale(0.1897)"><use href="#towerBaseTpl" class="tower-base-line"/><use href="#towerSparkTpl"/></g><g transform="translate(1199.7,262.4) scale(0.1252)"><use href="#towerBaseTpl" class="tower-base-line"/><use href="#towerSparkTpl"/></g><g transform="translate(1254.2,275.2) scale(0.0827)"><use href="#towerBaseTpl" class="tower-base-line"/><use href="#towerSparkTpl"/></g><g transform="translate(1290.2,283.6) scale(0.0546)"><use href="#towerBaseTpl" class="tower-base-line"/><use href="#towerSparkTpl"/></g><g transform="translate(1313.9,289.2) scale(0.0360)"><use href="#towerBaseTpl" class="tower-base-line"/><use href="#towerSparkTpl"/></g>
@@ -697,13 +724,13 @@
                 <div class="bg-gray-50 p-4 rounded-lg bg-gray-800">
                     <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2" id="required-h2">2. Required Cut Pieces</h2>
                     <label for="bulk-cut-pieces-input" class="text-sm" id="required-label">Paste data here (space or tab-separated):</label>
-                    <textarea id="bulk-cut-pieces-input" rows="6" class="w-full mt-2" placeholder="Angle Example: (Size Length MarkNo Qty Operation)&#10;50x50x5 1200 MK-001 10 Drilling&#10;50x50x5 800 MK-002 15 Bending&#10;&#10;Plate Example: (Thickness Width Length MarkNo Qty Operation)&#10;10 200 500 PC-101 5 Plasma"></textarea>
+                    <textarea id="bulk-cut-pieces-input" rows="5" class="w-full mt-2" placeholder="Angle Example: (Size Length MarkNo Qty Operation)&#10;50x50x5 1200 MK-001 10 Drilling&#10;50x50x5 800 MK-002 15 Bending&#10;&#10;Plate Example: (Thickness Width Length MarkNo Qty Operation)&#10;10 200 500 PC-101 5 Plasma"></textarea>
                     <p id="free-version-limit" class="text-sm text-red-400 mt-2 hidden">Free version is limited to a maximum of 5 required pieces. Please upgrade to the paid version.</p>
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg bg-gray-800">
                     <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2" id="stock-h2">3. Available Stock Angles</h2>
                     <label for="bulk-stock-angles-input" class="text-sm" id="stock-label">Paste data here (space or tab-separated):</label>
-                    <textarea id="bulk-stock-angles-input" rows="6" class="w-full mt-2" placeholder="Angle Example: (Size Length Qty)&#10;50x50x5 6000 5&#10;75x75x6 6000 10&#10;&#10;Plate Example: (Thickness Width Length Qty)&#10;10 1500 6000 2"></textarea>
+                    <textarea id="bulk-stock-angles-input" rows="5" class="w-full mt-2" placeholder="Angle Example: (Size Length Qty)&#10;50x50x5 6000 5&#10;75x75x6 6000 10&#10;&#10;Plate Example: (Thickness Width Length Qty)&#10;10 1500 6000 2"></textarea>
                 </div>
             </div>
         </div>
@@ -711,6 +738,9 @@
         <div class="text-center mb-8">
             <button id="optimize-btn" class="btn btn-primary text-lg">
                 Optimize Cutting Plan
+            </button>
+            <button id="deep-search-btn" class="btn btn-deep text-lg ml-3" title="Searches much longer (up to about 50 seconds) for a plan with fewer bars. Click again while it runs to stop and keep the best plan found so far.">
+                Deep search
             </button>
         </div>
 
@@ -745,6 +775,8 @@
                     </div>
                 </div>
             </div>
+
+            <p id="bound-info" class="hidden"></p>
 
             <p id="unmet-demand-message" class="text-red-400 bg-red-900 p-3 rounded-md mb-4 hidden"></p>
 
@@ -902,10 +934,36 @@
                 optimizeBtn.disabled = true;
                 optimizeBtn.textContent = 'Optimizing...';
                 // let the browser repaint the button before the (possibly multi-second) calculation starts
-                setTimeout(() => {
-                    try { optimizeCutting(); }
+                setTimeout(async () => {
+                    try { await optimizeCutting(); }
                     finally { optimizeBtn.disabled = false; optimizeBtn.textContent = label; }
                 }, 30);
+            });
+
+            // Deep search: same plan, but the angle optimizer keeps searching for up to ~50 s (click again to stop early)
+            const deepBtn = document.getElementById('deep-search-btn');
+            deepBtn.addEventListener('click', async () => {
+                if (angleDeepSearch) { angleDeepCancel = true; deepBtn.textContent = 'Stopping...'; return; }
+                if (currentMode !== 'angle') return;
+                if (document.getElementById('optimization-method').value !== 'advanced') {
+                    showMessageBox('Deep search', 'Deep search works with the Advanced optimization method. Please select Advanced and try again.');
+                    return;
+                }
+                const label = deepBtn.textContent;
+                angleDeepSearch = true; angleDeepCancel = false;
+                optimizeBtn.disabled = true;
+                deepBtn.classList.add('running');
+                const t0 = performance.now();
+                angleDeepTick = () => { deepBtn.textContent = `Stop deep search (${Math.round((performance.now() - t0) / 1000)} s)`; };
+                deepBtn.textContent = 'Stop deep search (0 s)';
+                await new Promise(r => setTimeout(r, 30));
+                try { await optimizeCutting(); }
+                finally {
+                    angleDeepSearch = false; angleDeepCancel = false; angleDeepTick = null;
+                    optimizeBtn.disabled = false;
+                    deepBtn.classList.remove('running');
+                    deepBtn.textContent = label;
+                }
             });
             downloadBtn.addEventListener('click', exportToExcel);
             document.getElementById('messageBoxOkBtn').addEventListener('click', hideMessageBox);
@@ -1679,6 +1737,9 @@
             
 // Core optimization logic
             let unmetDemand = [];
+            // Deep search + lower-bound reporting (angle mode)
+            let angleDeepSearch = false, angleDeepCancel = false, angleDeepMsPerSize = 0, angleDeepTick = null;
+            let angleBoundAcc = null, lastAngleBars = null;
             let lastPlateLayoutStock = null;
             let stockSizeList = [];
 
@@ -1699,7 +1760,7 @@
                 unmetDemand = unmetDemand.filter(c => c.angleSize !== size).concat(rest);
             }
             
-            function optimizeCutting() {
+            async function optimizeCutting() {
                 try {
                     parseDataFromTextarea();
                     const outputSection = document.getElementById('output-section');
@@ -1779,6 +1840,7 @@
                         let totalStockUsed = 0;
                         let totalWaste = 0;
                         let totalMaterialUsed = 0;
+                        angleBoundAcc = null;
 
                         const cutsByAngleSize = {};
                         requiredCuts.forEach(cut => {
@@ -1788,21 +1850,25 @@
                             cutsByAngleSize[cut.angleSize].push(cut);
                         });
 
-                        Object.keys(cutsByAngleSize).forEach(angleSize => {
+                        if (document.getElementById('optimization-method').value === 'advanced') angleBoundAcc = { bound: 0, sizes: 0, loose: false, incomplete: false };
+                        angleDeepMsPerSize = Math.max(3000, Math.floor(50000 / Math.max(1, Object.keys(cutsByAngleSize).length)));
+
+                        for (const angleSize of Object.keys(cutsByAngleSize)) {
                             const cutsForSize = cutsByAngleSize[angleSize];
                             const stockForSize = availableStock.filter(s => s.angleSize === angleSize);
 
                             if (stockForSize.length === 0) {
                                 cutsForSize.forEach(c => c.unmetReason = 'no stock of this size in the stock list');
                                 unmetDemand = unmetDemand.concat(cutsForSize);
-                                return;
+                                angleBoundAcc.incomplete = true;
+                                continue;
                             }
 
                             stockForSize.sort((a, b) => b.originalLength - a.originalLength);
 
                             switch (optimizationMethod) {
                                 case 'advanced':
-                                    advancedAngle(cutsForSize, stockForSize, kerfWidth, endTrimLoss);
+                                    await advancedAngle(cutsForSize, stockForSize, kerfWidth, endTrimLoss);
                                     break;
                                 case 'best-fit':
                                     bestFitDecreasing(cutsForSize, stockForSize, kerfWidth, endTrimLoss);
@@ -1816,7 +1882,7 @@
                             }
                             // Last-chance pass: never leave a piece unplaced if any bar of this size still has room for it
                             repairUnmet(stockForSize, angleSize, kerfWidth, endTrimLoss);
-                        });
+                        }
 
                         availableStock.forEach(stock => {
                             if (stock.cutsCount > 0) {
@@ -1950,8 +2016,12 @@
             // Priorities (in order): place every piece > least total stock length > fewest bars >
             // fewest different cutting patterns > waste concentrated in few bars (longer usable offcuts).
             // The search budget is counted in work done (not clock time), so the same input always gives the same plan.
-            function advancedAngle(cuts, stock, kerf, trim) {
-                const WORK_STAGE1 = 1.2e8, WORK_TOTAL = 3.6e8, HARD_MS = 6000; // HARD_MS is only a safety stop
+            async function advancedAngle(cuts, stock, kerf, trim) {
+                const DEEP = angleDeepSearch;
+                // Normal run stops at whichever comes first: work budget, 10 s, or the stall limit.
+                // Deep search raises all three (time is shared between the stock sizes) and can be stopped by the user.
+                const WORK_STAGE1 = 1.2e8, WORK_TOTAL = DEEP ? 6e9 : 6e8, HARD_MS = DEEP ? angleDeepMsPerSize : 10000;
+                const STALL_LIMIT = DEEP ? 6000 : 1000;
                 const startTime = performance.now();
                 let work = 0;
                 const ints = [kerf, trim, ...cuts.map(c => c.length), ...stock.map(s => s.originalLength)].every(Number.isInteger);
@@ -2052,7 +2122,7 @@
                     return { bars: r.bars, left: r.left, pool, score: scoreOf(r.bars, r.left) };
                 };
                 const better = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i]; return false; };
-                const outOfTime = () => performance.now() - startTime > HARD_MS;
+                const outOfTime = () => performance.now() - startTime > HARD_MS || (DEEP && angleDeepCancel);
 
                 // Stage 1: several constructive strategies (with and without pattern reuse), keep the best
                 const base = [];
@@ -2210,8 +2280,13 @@
                 // pieces from scratch, keep the result only if it is strictly better.
                 if (best.left === 0 && best.bars.length > 1) {
                     const lbBars = lens.length === 1 ? Math.max(lpBoundBars, Math.ceil(types.reduce((x, t) => x + t * groups.get(t).length, 0) / capOf(lens[0]))) : 0;
-                    let stall = 0;
-                    while (work < WORK_TOTAL && !outOfTime() && stall < 400 && !(lbBars && best.bars.length <= lbBars && best.score[3] <= 1)) {
+                    let stall = 0, lastYield = performance.now();
+                    while (work < WORK_TOTAL && !outOfTime() && stall < STALL_LIMIT && !(lbBars && best.bars.length <= lbBars && best.score[3] <= 1)) {
+                        if (DEEP && performance.now() - lastYield > 150) {   // let the page repaint / accept the Stop click
+                            lastYield = performance.now();
+                            if (angleDeepTick) angleDeepTick();
+                            await new Promise(r => setTimeout(r, 0));
+                        }
                         const bars = best.bars;
                         const m = Math.min(bars.length, 2 + Math.floor(rand() * 4));
                         const order = bars.map((b, i) => [i, capOf(b.st.originalLength) - fillOf(b)]).sort((x, y) => y[1] - x[1]);
@@ -2232,6 +2307,19 @@
                         }
                         stall = improved ? 0 : stall + 1;
                     }
+                }
+
+                // Lower bound on the number of bars this section size needs (shown next to the results).
+                // One stock length: ceil of the LP optimum (column generation) and of total length / usable bar length.
+                // Several stock lengths: only the second, using the longest bar, so the bound is looser.
+                if (angleBoundAcc) {
+                    if (best.left === 0) {
+                        const sumW = types.reduce((x, t) => x + t * groups.get(t).length, 0);
+                        let lb = Math.ceil(sumW / capOf(lens[0]) - 1e-9);
+                        if (lens.length === 1) lb = Math.max(lb, lpBoundBars);
+                        angleBoundAcc.bound += lb; angleBoundAcc.sizes++;
+                        if (lens.length > 1) angleBoundAcc.loose = true;
+                    } else angleBoundAcc.incomplete = true;
                 }
 
                 // Place the pieces. Bars are ordered by pattern and pieces by mark number, so bars with the same
@@ -2473,6 +2561,8 @@
             function displayResults(usedStock, unmetDemand, totalStockMetric, totalWasteMetric, totalMaterialUsedMetric, mode) {
                 const tbody = document.querySelector('#optimization-results tbody');
                 tbody.innerHTML = '';
+                const boundEl = document.getElementById('bound-info');
+                if (boundEl) boundEl.classList.add('hidden');
                 renderPlateLayouts(usedStock, mode);
                 const downloadBtn = document.getElementById('download-excel-btn');
                 const unmetMsgElement = document.getElementById('unmet-demand-message');
@@ -2691,9 +2781,32 @@
                     });
                 }
 
+                renderAngleBoundInfo(mode, usedStock.length, unmetDemand.length);
                 displayUnmetDemand(unmetDemand, mode);
                 outputSection.classList.remove('hidden');
                 downloadBtn.classList.remove('hidden');
+            }
+
+            function renderAngleBoundInfo(mode, usedBars, unmetCount) {
+                const el = document.getElementById('bound-info');
+                if (!el) return;
+                const a = angleBoundAcc;
+                if (mode !== 'angle') { el.classList.add('hidden'); return; }
+                const prev = lastAngleBars;
+                lastAngleBars = unmetCount === 0 ? usedBars : null;
+                if (!a || !a.sizes || a.incomplete || unmetCount > 0 || !a.bound) { el.classList.add('hidden'); return; }
+                const gap = usedBars - a.bound;
+                let html = `Lower bound: <b>${a.bound}</b> bars &middot; this plan uses <b>${usedBars}</b> bars. `;
+                if (gap <= 0) html += 'This is the fewest bars possible, so no plan can do better on bar count.';
+                else html += `It is ${gap} bar${gap > 1 ? 's' : ''} above the bound, so fewer bars <i>may</i> be possible (the bound is not always reachable).`;
+                if (a.loose) html += ' Several stock lengths are in use, so this bound is approximate and can be lower than the true minimum.';
+                if (angleDeepSearch) {
+                    if (prev != null && usedBars < prev) html += ` <b>Deep search saved ${prev - usedBars} bar${prev - usedBars > 1 ? 's' : ''} (${prev} &rarr; ${usedBars}).</b>`;
+                    else html += ' Deep search found no further reduction.';
+                }
+                el.innerHTML = html;
+                el.classList.toggle('optimal', gap <= 0);
+                el.classList.remove('hidden');
             }
 
             function displayUnmetDemand(unmetDemand, mode) {
