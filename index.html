@@ -437,7 +437,7 @@
         }
         #angle-optimization-btn:hover, #plate-optimization-btn:hover,
         #free-version-btn:hover, #paid-version-btn:hover {
-            transform: rotate(18deg);
+            transform: rotate(15deg);
         }
         .version-switcher button:not(.active):hover {
             background-color: var(--panel-3) !important;
@@ -486,6 +486,26 @@
         #mapping-modal thead select { background-color: var(--panel); border: 1px solid var(--border); color: var(--text); width: 100%; }
 
         /* Alternating table rows */
+        /* In-page Excel view (opened instead of downloading a file) */
+        #excel-viewer { position: fixed; inset: 0; z-index: 1100; display: none; align-items: center; justify-content: center; background: rgba(4, 10, 16, 0.72); }
+        #excel-viewer.open { display: flex; }
+        .xv-panel { width: min(1240px, 96vw); height: 88vh; display: flex; flex-direction: column; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6); color: #111; }
+        .xv-title { background: #217346; color: #fff; padding: 0.55rem 0.9rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .xv-x { background: transparent; border: 0; color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 0.3rem; }
+        .xv-body { flex: 1; overflow: auto; background: #fff; }
+        .xv-grid { border-collapse: collapse; font-family: Calibri, "Segoe UI", Arial, sans-serif; font-size: 14px; }
+        .xv-grid th, .xv-grid td { border: 1px solid #d0d7de; padding: 3px 10px; min-width: 130px; height: 24px; background: #fff; color: #111; }
+        .xv-grid thead th { position: sticky; top: 0; z-index: 2; background: #f3f3f3; color: #444; font-weight: 500; text-align: center; }
+        .xv-grid th.xv-rn { min-width: 38px; width: 38px; background: #f3f3f3; color: #444; font-weight: 500; text-align: center; position: sticky; left: 0; z-index: 1; }
+        .xv-grid thead th.xv-corner { left: 0; z-index: 3; min-width: 38px; }
+        .xv-grid td.xv-head { font-weight: 700; text-align: center; }
+        .xv-grid td.xv-c { text-align: center; vertical-align: top; }
+        .xv-foot { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.6rem 0.9rem; background: #f3f3f3; border-top: 1px solid #d0d7de; font-size: 0.85rem; color: #444; }
+        .xv-btn { border: 1px solid #b6bfc8; background: #fff; color: #111; padding: 0.4rem 1rem; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .xv-btn:hover { background: #eef1f4; }
+        .xv-btn-green { background: #217346; border-color: #217346; color: #fff; }
+        .xv-btn-green:hover { background: #1a5c38; }
+        .xv-actions { display: flex; gap: 0.5rem; }
         .striped-row { background-color: var(--panel-3); }
 
         /* Plate vs Angle parameter visibility (unchanged behaviour) */
@@ -776,12 +796,20 @@
         <div id="output-section" class="hidden">
             <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
                 <h2 class="text-2xl font-bold">Optimization Results</h2>
-                <button id="download-excel-btn" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                <div class="flex items-center gap-3 flex-wrap">
+                    <button id="download-xlsx-btn" class="btn btn-primary" title="Downloads the results as an .xlsx file right away.">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Download Excel
+                    </button>
+                    <button id="download-excel-btn" class="btn btn-primary" title="Opens the results as an Excel sheet right here, without downloading anything. Use Save As inside it only if you want a file.">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 1v3h4V5H5zm6 0v3h4V5h-4zM5 10v3h4v-3H5zm6 0v3h4v-3h-4z" clip-rule="evenodd" />
                     </svg>
-                    Download Excel
-                </button>
+                        Open Excel View
+                    </button>
+                </div>
             </div>
             
             <div id="summary-section" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -839,6 +867,19 @@
         <button id="messageBoxOkBtn" class="btn btn-primary">OK</button>
     </div>
 
+    <div id="excel-viewer" aria-hidden="true">
+        <div class="xv-panel" role="dialog" aria-label="Excel view">
+            <div class="xv-title"><span id="xv-title-text">Excel View</span><button id="xv-close-x" class="xv-x" title="Close (Esc)">&times;</button></div>
+            <div class="xv-body"><div id="xv-grid-host"></div></div>
+            <div class="xv-foot">
+                <span class="xv-note">Nothing is downloaded. Use <b>Save As&hellip;</b> only if you want a file.</span>
+                <span class="xv-actions">
+                    <button id="xv-save" class="xv-btn xv-btn-green">Save As&hellip;</button>
+                    <button id="xv-close" class="xv-btn">Close</button>
+                </span>
+            </div>
+        </div>
+    </div>
     <div id="login-modal" class="message-box">
         <h3 class="text-xl font-bold mb-4">Paid Version Login</h3>
         <div class="space-y-4">
@@ -1528,91 +1569,184 @@
                 document.getElementById('backdrop').style.display = 'none';
             }
 
-            function exportToExcel() {
-                const table = document.getElementById('optimization-results');
-                if (!table) return;
+            // ---- Excel view: show the results as an Excel sheet inside the page (no download). "Save As..." writes a real .xlsx only on request. ----
+            const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            let excelViewerState = null;
 
-                // Angle mode: styled export (custom headers, bold header row,
-                // alternating white / RGB(185,240,239) background per section).
-                if (currentMode === 'angle' && typeof ExcelJS !== 'undefined') {
-                    exportAngleExcelStyled(table);
-                    return;
-                }
+            function exportToExcel() { openExcelViewer(); }
 
-                const wb = XLSX.utils.table_to_book(table, {
-                    sheet: "Cutting Plan"
-                });
-
-                XLSX.writeFile(wb, `${currentMode === 'angle' ? 'OptimizedAngleCuttingPlan' : 'OptimizedPlateCuttingPlan'}.xlsx`);
-            }
-
-            async function exportAngleExcelStyled(table) {
-                // Columns kept from the on-screen table (0-based): Section Size,
-                // Section Length, Section Qty, Mark No., Cut Length, Cut qty/sec,
-                // Total Cut Qty, Remaining / Section. Operation and Utilization
-                // are not exported.
-                const keep = [0, 1, 2, 3, 4, 5, 6, 8];
-                const headers = ['Section Size', 'Section Length', 'Section Qty', 'Mark No.',
-                                 'Cut Length', 'Cut qty/sec.', 'Total Cut Qty', 'Remaining Length'];
-                const BAND = 'FFB9F0EF';   // RGB(185, 240, 239)
-                const WHITE = 'FFFFFFFF';
-
-                // SheetJS reads the HTML table and resolves the rowSpan merges for us.
-                const src = XLSX.utils.table_to_sheet(table);
+            // Everything the sheet needs, read from the on-screen results table.
+            function buildExcelModel(table) {
+                const src = XLSX.utils.table_to_sheet(table);   // resolves rowSpan/colSpan into cells and merges
                 const range = XLSX.utils.decode_range(src['!ref']);
-                const merges = src['!merges'] || [];
-
-                const wb = new ExcelJS.Workbook();
-                const ws = wb.addWorksheet('Cutting Plan');
-                const thin = { style: 'thin', color: { argb: 'FF9AA5B1' } };
-                const border = { top: thin, left: thin, bottom: thin, right: thin };
-
-                // Header row (bold)
-                const headerRow = ws.addRow(headers);
-                headerRow.eachCell(cell => {
-                    cell.font = { bold: true };
-                    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-                    cell.border = border;
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: WHITE } };
-                });
-
-                // Body rows. DOM row 0 is the header row, so body starts at r = 1.
+                const isAngle = currentMode === 'angle';
+                // Angle: Section Size, Section Length, Section Qty, Mark No., Cut Length, Cut qty/sec, Total Cut Qty, Remaining
+                // (screen columns 0-6 and 8; Operation and Utilization are not exported). Plate: every column as on screen.
+                const keep = isAngle ? [0, 1, 2, 3, 4, 5, 6, 8] : Array.from({ length: range.e.c + 1 }, (_, i) => i);
+                const cellAt = (r, c) => {
+                    const x = src[XLSX.utils.encode_cell({ r, c })];
+                    return x ? { v: x.v, w: x.w != null ? String(x.w) : (x.v == null ? '' : String(x.v)) } : { v: null, w: '' };
+                };
+                const headers = isAngle
+                    ? ['Section Size', 'Section Length', 'Section Qty', 'Mark No.', 'Cut Length', 'Cut qty/sec.', 'Total Cut Qty', 'Remaining Length']
+                    : keep.map(c => cellAt(0, c).w);
+                const body = [], banded = [];
                 for (let r = 1; r <= range.e.r; r++) {
+                    body.push(keep.map(c => cellAt(r, c)));
                     const tr = table.rows[r];
-                    const banded = !!(tr && tr.classList.contains('striped-row'));
-                    const values = keep.map(c => {
-                        const cell = src[XLSX.utils.encode_cell({ r, c })];
-                        return cell ? cell.v : null;
-                    });
-                    const row = ws.addRow(values);
-                    row.eachCell({ includeEmpty: true }, cell => {
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: banded ? BAND : WHITE } };
-                        cell.border = border;
-                        cell.alignment = { vertical: 'top', horizontal: 'center' };
-                    });
+                    banded.push(!!(tr && tr.classList.contains('striped-row')));
                 }
-
-                // Re-create the section merges (Section Size / Length / Qty / Remaining).
-                merges.forEach(m => {
+                const merges = [];   // body coordinates: r0/r1 are body row indexes
+                (src['!merges'] || []).forEach(m => {
                     if (m.s.r < 1) return;
-                    const col = keep.indexOf(m.s.c);
-                    if (col === -1) return;
-                    if (m.e.r > m.s.r) ws.mergeCells(m.s.r + 1, col + 1, m.e.r + 1, col + 1);
+                    const c0 = keep.indexOf(m.s.c), c1 = keep.indexOf(m.e.c);
+                    if (c0 === -1 || c1 === -1) return;
+                    if (m.e.r > m.s.r || c1 > c0) merges.push({ r0: m.s.r - 1, c0, r1: m.e.r - 1, c1 });
                 });
-
-                ws.columns.forEach(c => { c.width = 18; });
-
-                const buf = await wb.xlsx.writeBuffer();
-                const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'OptimizedAngleCuttingPlan.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
+                return { styled: isAngle, fileName: isAngle ? 'OptimizedAngleCuttingPlan.xlsx' : 'OptimizedPlateCuttingPlan.xlsx', sheetName: 'Cutting Plan', headers, body, banded, merges };
             }
+
+            function colLetter(i) { let s = ''; i++; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+
+            function renderExcelGrid(model) {
+                const nCols = model.headers.length;
+                const tl = new Map(), covered = new Set();   // merge top-left cells and the cells they swallow (grid row 0 = header row)
+                model.merges.forEach(m => {
+                    const r0 = m.r0 + 1, r1 = m.r1 + 1;
+                    tl.set(r0 + ',' + m.c0, { rs: r1 - r0 + 1, cs: m.c1 - m.c0 + 1 });
+                    for (let r = r0; r <= r1; r++) for (let c = m.c0; c <= m.c1; c++) if (r !== r0 || c !== m.c0) covered.add(r + ',' + c);
+                });
+                const table = document.createElement('table');
+                table.className = 'xv-grid';
+                const thead = table.createTHead().insertRow();
+                const corner = document.createElement('th'); corner.className = 'xv-corner'; thead.appendChild(corner);
+                for (let c = 0; c < nCols; c++) { const th = document.createElement('th'); th.textContent = colLetter(c); thead.appendChild(th); }
+                const tb = table.createTBody();
+                const addRow = (gridRow, cells, bandedRow, isHead) => {
+                    const tr = tb.insertRow();
+                    const rn = document.createElement('th'); rn.className = 'xv-rn'; rn.textContent = String(gridRow + 1); tr.appendChild(rn);
+                    for (let c = 0; c < nCols; c++) {
+                        const key = gridRow + ',' + c;
+                        if (covered.has(key)) continue;
+                        const td = tr.insertCell();
+                        td.textContent = cells[c];
+                        if (isHead) td.className = 'xv-head';
+                        else if (model.styled) td.className = 'xv-c';
+                        if (bandedRow) td.style.background = '#B9F0EF';   // RGB(185, 240, 239)
+                        const m = tl.get(key);
+                        if (m) { if (m.rs > 1) td.rowSpan = m.rs; if (m.cs > 1) td.colSpan = m.cs; }
+                    }
+                };
+                addRow(0, model.headers, false, true);
+                model.body.forEach((row, i) => addRow(i + 1, row.map(x => x.w), model.styled && model.banded[i], false));
+                return table;
+            }
+
+            async function buildExcelBuffer(model, table) {
+                if (model.styled && typeof ExcelJS !== 'undefined') {
+                    const BAND = 'FFB9F0EF', WHITE = 'FFFFFFFF';
+                    const wb = new ExcelJS.Workbook();
+                    const ws = wb.addWorksheet(model.sheetName);
+                    const thin = { style: 'thin', color: { argb: 'FF9AA5B1' } };
+                    const border = { top: thin, left: thin, bottom: thin, right: thin };
+                    const solid = argb => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+                    ws.addRow(model.headers).eachCell(cell => {
+                        cell.font = { bold: true };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                        cell.border = border;
+                        cell.fill = solid(WHITE);
+                    });
+                    model.body.forEach((row, i) => {
+                        ws.addRow(row.map(x => x.v)).eachCell({ includeEmpty: true }, cell => {
+                            cell.fill = solid(model.banded[i] ? BAND : WHITE);
+                            cell.border = border;
+                            cell.alignment = { vertical: 'top', horizontal: 'center' };
+                        });
+                    });
+                    model.merges.forEach(m => ws.mergeCells(m.r0 + 2, m.c0 + 1, m.r1 + 2, m.c1 + 1));
+                    ws.columns.forEach(c => { c.width = 18; });
+                    return await wb.xlsx.writeBuffer();
+                }
+                let wb;
+                if (model.styled) {   // ExcelJS did not load: plain workbook with the same headers / merges, no colours
+                    const ws = XLSX.utils.aoa_to_sheet([model.headers].concat(model.body.map(r => r.map(x => x.v))));
+                    ws['!merges'] = model.merges.map(m => ({ s: { r: m.r0 + 1, c: m.c0 }, e: { r: m.r1 + 1, c: m.c1 } }));
+                    wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, model.sheetName);
+                } else {
+                    wb = XLSX.utils.table_to_book(table, { sheet: model.sheetName });
+                }
+                return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            }
+
+            // Save As: a real "choose where to save" dialog where the browser has one (Chrome / Edge); otherwise a normal download.
+            async function saveExcelAs() {
+                if (!excelViewerState) return;
+                const { model, table } = excelViewerState;
+                let buf;
+                try { buf = await buildExcelBuffer(model, table); }
+                catch (e) { showMessageBox('Excel', 'Could not build the Excel file: ' + (e && e.message ? e.message : e)); return; }
+                if (window.showSaveFilePicker) {
+                    try {
+                        const handle = await window.showSaveFilePicker({ suggestedName: model.fileName, types: [{ description: 'Excel Workbook', accept: { [XLSX_MIME]: ['.xlsx'] } }] });
+                        const w = await handle.createWritable();
+                        await w.write(buf);
+                        await w.close();
+                        return;
+                    } catch (e) {
+                        if (e && e.name === 'AbortError') return;   // the user cancelled the dialog
+                        // the dialog is blocked here (for example inside an embedded page): fall through to a normal download
+                    }
+                }
+                const url = URL.createObjectURL(new Blob([buf], { type: XLSX_MIME }));
+                const a = document.createElement('a');
+                a.href = url; a.download = model.fileName;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+            }
+
+            // Download Excel: build the same workbook as Save As and download it straight away (no view, no dialog)
+            async function downloadExcelNow() {
+                const table = document.getElementById('optimization-results');
+                if (!table || !table.rows.length) return;
+                let model, buf;
+                try { model = buildExcelModel(table); buf = await buildExcelBuffer(model, table); }
+                catch (e) { showMessageBox('Excel', 'Could not build the Excel file: ' + (e && e.message ? e.message : e)); return; }
+                const url = URL.createObjectURL(new Blob([buf], { type: XLSX_MIME }));
+                const a = document.createElement('a');
+                a.href = url; a.download = model.fileName;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+            }
+            document.getElementById('download-xlsx-btn').addEventListener('click', downloadExcelNow);
+
+            function openExcelViewer() {
+                const table = document.getElementById('optimization-results');
+                if (!table || !table.rows.length) return;
+                let model;
+                try { model = buildExcelModel(table); }
+                catch (e) { showMessageBox('Excel', 'Could not open the Excel view: ' + (e && e.message ? e.message : e)); return; }
+                excelViewerState = { model, table };
+                document.getElementById('xv-title-text').textContent = 'Excel View  \u2014  ' + model.fileName + '  \u2014  ' + model.sheetName;
+                const host = document.getElementById('xv-grid-host');
+                host.innerHTML = '';
+                host.appendChild(renderExcelGrid(model));
+                const v = document.getElementById('excel-viewer');
+                v.classList.add('open'); v.setAttribute('aria-hidden', 'false');
+                document.getElementById('xv-save').focus();
+            }
+
+            function closeExcelViewer() {
+                const v = document.getElementById('excel-viewer');
+                v.classList.remove('open'); v.setAttribute('aria-hidden', 'true');
+                document.getElementById('xv-grid-host').innerHTML = '';
+                excelViewerState = null;
+            }
+            document.getElementById('xv-save').addEventListener('click', saveExcelAs);
+            document.getElementById('xv-close').addEventListener('click', closeExcelViewer);
+            document.getElementById('xv-close-x').addEventListener('click', closeExcelViewer);
+            document.getElementById('excel-viewer').addEventListener('click', e => { if (e.target.id === 'excel-viewer') closeExcelViewer(); });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && excelViewerState) closeExcelViewer(); });
             // End of utility functions
 
             // --- 2D PLATE OPTIMIZATION: guillotine packing (kerf-aware, rotation allowed) + ruin-and-recreate search ---
