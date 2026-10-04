@@ -437,7 +437,7 @@
         }
         #angle-optimization-btn:hover, #plate-optimization-btn:hover,
         #free-version-btn:hover, #paid-version-btn:hover {
-            transform: rotate(10deg);
+            transform: rotate(18deg);
         }
         .version-switcher button:not(.active):hover {
             background-color: var(--panel-3) !important;
@@ -964,8 +964,10 @@
                 optimizeBtn.textContent = 'Optimizing...';
                 // let the browser repaint the button before the (possibly multi-second) calculation starts
                 setTimeout(async () => {
+                    const t0 = performance.now();
+                    angleDeepTick = () => { optimizeBtn.textContent = `Optimizing... ${Math.round((performance.now() - t0) / 1000)} s`; };
                     try { await optimizeCutting(); }
-                    finally { optimizeBtn.disabled = false; optimizeBtn.textContent = label; }
+                    finally { angleDeepTick = null; optimizeBtn.disabled = false; optimizeBtn.textContent = label; }
                 }, 30);
             });
 
@@ -1879,7 +1881,7 @@
                             cutsByAngleSize[cut.angleSize].push(cut);
                         });
 
-                        if (document.getElementById('optimization-method').value === 'advanced') angleBoundAcc = { bound: 0, sizes: 0, loose: false, incomplete: false };
+                        if (document.getElementById('optimization-method').value === 'advanced') angleBoundAcc = { bound: 0, sizes: 0, loose: false, incomplete: false, lenBound: 0, lenUnknown: false };
                         angleDeepMsPerSize = Math.max(3000, Math.floor(50000 / Math.max(1, Object.keys(cutsByAngleSize).length)));
 
                         for (const angleSize of Object.keys(cutsByAngleSize)) {
@@ -2047,9 +2049,9 @@
             // The search budget is counted in work done (not clock time), so the same input always gives the same plan.
             async function advancedAngle(cuts, stock, kerf, trim) {
                 const DEEP = angleDeepSearch;
-                // Normal run stops at whichever comes first: work budget, 10 s, or the stall limit.
+                // Normal run stops at whichever comes first: work budget, 20 s, or the stall limit.
                 // Deep search raises all three (time is shared between the stock sizes) and can be stopped by the user.
-                const WORK_STAGE1 = 1.2e8, WORK_TOTAL = DEEP ? 6e9 : 6e8, HARD_MS = DEEP ? angleDeepMsPerSize : 10000;
+                const WORK_STAGE1 = 1.2e8, WORK_TOTAL = DEEP ? 6e9 : 6e8, HARD_MS = DEEP ? angleDeepMsPerSize : 20000;
                 const STALL_LIMIT = DEEP ? 6000 : 1000;
                 const startTime = performance.now();
                 let work = 0;
@@ -2153,6 +2155,142 @@
                 const better = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i]; return false; };
                 const outOfTime = () => performance.now() - startTime > HARD_MS || (DEEP && angleDeepCancel);
 
+                // Exact repack of a small group: can these pieces (counts per type) be packed into bars with the given capacities?
+                // Depth-first "bin completion": each bar takes a maximal subset that contains the largest remaining piece, and
+                // the total waste allowed (sum of capacities minus total piece weight) prunes every branch that wastes too much,
+                // so groups that must be packed almost perfectly (e.g. three pieces that add up to a full bar) are solved fast.
+                const packExact = (counts0, caps, nodeLimit) => {
+                    const m = types.length, k = caps.length;
+                    const counts = counts0.slice();
+                    const order = caps.map((c, i) => i).sort((a, b) => caps[b] - caps[a]);
+                    const capFrom = new Array(k + 1).fill(0);
+                    for (let b = k - 1; b >= 0; b--) capFrom[b] = capFrom[b + 1] + caps[order[b]];
+                    const takes = new Array(k);
+                    let nodes = 0, W0 = 0, genSteps = 0;
+                    for (let i = 0; i < m; i++) W0 += counts[i] * types[i];
+                    const LIMIT = {};
+                    const rec = (b, W) => {
+                        if (W === 0) { for (let q = b; q < k; q++) takes[order[q]] = new Array(m).fill(0); return true; }
+                        if (b >= k) return false;
+                        if (++nodes > nodeLimit || ((nodes & 127) === 0 && outOfTime())) throw LIMIT;
+                        const budget = capFrom[b] - W;
+                        if (budget < 0) return false;
+                        const cap = caps[order[b]];
+                        let a = 0; while (counts[a] === 0) a++;
+                        if (types[a] > cap) return false;
+                        counts[a]--;
+                        const lo = cap - Math.min(budget, cap);
+                        const suf = new Array(m + 1).fill(0);
+                        for (let t = m - 1; t >= 0; t--) suf[t] = suf[t + 1] + counts[t] * types[t];
+                        const x = new Array(m).fill(0), cands = [];
+                        const gen = (t, load) => {
+                            if (cands.length >= 300) return;
+                            // a node's candidate search can be huge even when it yields few candidates, so it must watch the clock too
+                            if ((++genSteps & 2047) === 0 && outOfTime()) throw LIMIT;
+                            if (load + suf[t] < lo) return;
+                            if (t === m) {
+                                if (load < lo) return;
+                                for (let u = 0; u < m; u++) if (counts[u] - x[u] > 0 && types[u] <= cap - load) return;   // not maximal
+                                cands.push({ take: x.slice(), load });
+                                return;
+                            }
+                            const w = types[t], mx = Math.min(counts[t], Math.floor((cap - load) / w));
+                            for (let q = mx; q >= 0; q--) { x[t] = q; gen(t + 1, load + q * w); }
+                            x[t] = 0;
+                        };
+                        const gs0 = genSteps;
+                        gen(0, types[a]);
+                        work += cands.length * 4 + 20 + (genSteps - gs0) / 4;
+                        cands.sort((p, q) => q.load - p.load);
+                        let ok = false;
+                        for (const c of cands) {
+                            const tk = c.take.slice(); tk[a]++;
+                            for (let t = 0; t < m; t++) counts[t] -= c.take[t];
+                            takes[order[b]] = tk;
+                            let r;
+                            try { r = rec(b + 1, W - c.load - 0); } finally { for (let t = 0; t < m; t++) counts[t] += c.take[t]; }
+                            if (r) { ok = true; break; }
+                        }
+                        counts[a]++;
+                        return ok;
+                    };
+                    try { return rec(0, W0) ? takes : null; } catch (e) { if (e === LIMIT) return null; throw e; }
+                };
+
+                // Bin elimination: empty one low-fill bar and push its pieces into the other bars. When a piece does not fit
+                // anywhere, swap it for one or two smaller pieces of a bar (those go back to the waiting list). The waiting
+                // weight strictly drops with every swap, so it always ends; success removes one bar from the plan.
+                const eliminate = bars => {
+                    const n = bars.length;
+                    const takes = bars.map(b => b.take.slice());
+                    const caps = bars.map(b => capOf(b.st.originalLength));
+                    const loads = takes.map(tk => { let x = 0; for (let i = 0; i < tk.length; i++) x += tk[i] * types[i]; return x; });
+                    const ord = bars.map((b, i) => [i, (caps[i] - loads[i]) / caps[i] + rand() * 0.02]).sort((a, b) => b[1] - a[1]);
+                    const v = ord[Math.floor(rand() * Math.max(1, Math.ceil(n * 0.35)))][0];
+                    const pend = takes[v].slice();
+                    let left = pend.reduce((x, y) => x + y, 0);
+                    const alive = [];
+                    for (let i = 0; i < n; i++) if (i !== v) alive.push(i);
+                    const m = types.length;
+                    for (let it = 0; it < 6000 && left > 0; it++) {
+                        // next waiting piece: usually the largest, sometimes a random one
+                        let pi = -1;
+                        if (rand() < 0.75) { for (let i = 0; i < m; i++) if (pend[i] > 0) { pi = i; break; } }
+                        else { let k = Math.floor(rand() * left); for (let i = 0; i < m; i++) { k -= pend[i]; if (k < 0) { pi = i; break; } } }
+                        const w = types[pi];
+                        let ba = -1, bf = Infinity;
+                        for (let q = 0; q < alive.length; q++) { const A = alive[q], fr = caps[A] - loads[A]; if (fr >= w && fr - w < bf) { bf = fr - w; ba = A; } }
+                        work += alive.length;
+                        if (ba >= 0) { takes[ba][pi]++; loads[ba] += w; pend[pi]--; left--; continue; }
+                        // swap search: candidates (bar A, remove piece j [and k]) with removed weight s < w and room for w afterwards
+                        let c1 = null, c1v = -1, cn = 0;
+                        for (let q = 0; q < alive.length; q++) {
+                            const A = alive[q], fr = caps[A] - loads[A], tk = takes[A];
+                            for (let j = 0; j < m; j++) {
+                                if (tk[j] <= 0) continue;
+                                const sj = types[j];
+                                if (sj >= w) continue;
+                                if (fr + sj >= w) { const nl = loads[A] - sj + w; if (nl > c1v || (nl === c1v && rand() < 1 / (++cn))) { if (nl > c1v) cn = 1; c1v = nl; c1 = [A, j, -1]; } }
+                                for (let k = j; k < m; k++) {
+                                    if (tk[k] <= (k === j ? 1 : 0)) continue;
+                                    const s2 = sj + types[k];
+                                    if (s2 >= w) continue;
+                                    if (fr + s2 >= w) { const nl = loads[A] - s2 + w; if (nl > c1v || (nl === c1v && rand() < 1 / (++cn))) { if (nl > c1v) cn = 1; c1v = nl; c1 = [A, j, k]; } }
+                                }
+                            }
+                        }
+                        work += alive.length * 6;
+                        if (!c1) return null;
+                        const [A, j, k] = c1;
+                        takes[A][j]--; loads[A] -= types[j]; pend[j]++; left++;
+                        if (k >= 0) { takes[A][k]--; loads[A] -= types[k]; pend[k]++; left++; }
+                        takes[A][pi]++; loads[A] += w; pend[pi]--; left--;
+                    }
+                    if (left > 0) return null;
+                    return { removed: bars[v].st, bars: alive.map(A => ({ st: bars[A].st, take: takes[A] })) };
+                };
+
+                const achievableLength = x => {
+                    const gcd = (a, b) => b ? gcd(b, a % b) : a;
+                    const g = lens.reduce((a, b) => gcd(a, b), 0) || 1;
+                    const need = Math.ceil((x - 1e-4) / g);
+                    if (need > 4e6) return Math.ceil(x - 1e-4);
+                    const cnt = new Map(lens.map(L => [L, 0]));
+                    stock.forEach(sk => cnt.set(sk.originalLength, cnt.get(sk.originalLength) + 1));
+                    const lim = need + Math.floor(lens[0] / g);
+                    const reach = new Uint8Array(lim + 1); reach[0] = 1;
+                    for (const [L, q0] of cnt) {
+                        const w = L / g; let q = Math.min(q0, Math.ceil(lim / w));
+                        for (let chunk = 1; q > 0; chunk *= 2) {
+                            const take = Math.min(chunk, q); q -= take;
+                            const cw = w * take;
+                            for (let c = lim; c >= cw; c--) if (!reach[c] && reach[c - cw]) reach[c] = 1;
+                        }
+                    }
+                    for (let c = Math.max(need, 0); c <= lim; c++) if (reach[c]) return c * g;
+                    return Math.ceil(x - 1e-4);
+                };
+
                 // Stage 1: several constructive strategies (with and without pattern reuse), keep the best
                 const base = [];
                 [true, false].forEach(rp => [true, false].forEach(an => [false, true].forEach(lf => base.push({ anchor: an, longFirst: lf, repeat: rp }))));
@@ -2166,11 +2304,11 @@
                 // Stage 1b: LP relaxation by column generation (Gilmore-Gomory, revised simplex) + rounding.
                 // The LP is a lower bound on the material needed and shows which bar lengths / patterns a near-perfect plan uses.
                 // Its rounded solution is only an extra starting point: it is validated and never replaces a better plan.
-                let lpBoundBars = 0;
+                let lpBoundBars = 0, lpLenBound = 0;
                 const lpSeeds = () => {
                     const m = types.length, k = lens.length, R = m + k;
                     // Worthwhile when lengths repeat (about 3+ pieces per different length) or when pieces are still unplaced; otherwise it just costs time
-                    if (m < 2 || m > 150 || (cuts.length < 3 * m && best.left === 0)) return [];  // (always try when the first plan left pieces unplaced)
+                    if (m < 2 || m > 260) return [];   // always run: besides seeding the search it gives the lower bound (optimality certificate)
                     const d = types.map(t => types.length && t <= capOf(lens[0]) ? groups.get(t).length : 0);
                     const avail = lens.map(L => stock.filter(x => x.originalLength === L).length);
                     const Lmax = lens[0], cost = lens.map(L => L / Lmax), BIG = 1e3;
@@ -2214,9 +2352,10 @@
                         while (c > 0) { const i = ch[c]; if (i < 0) c--; else { take[i]++; c -= types[i]; } }
                         return { val: best[cap], take };
                     };
-                    const LP_WORK = 1.5e8, LP_ITERS = 4000;
+                    const LP_WORK = DEEP ? 8e9 : 3e9, LP_ITERS = 60000, LP_MS = DEEP ? 15000 : 4000;
                     const lpStart = work; let converged = false;
-                    for (let it = 0; it < LP_ITERS && work - lpStart < LP_WORK && !outOfTime(); it++) {
+                    const lpT0 = performance.now();
+                    for (let it = 0; it < LP_ITERS && work - lpStart < LP_WORK && !outOfTime() && performance.now() - lpT0 < LP_MS; it++) {
                         const cb = cB();
                         for (let r = 0; r < R; r++) { let s = 0; for (let q = 0; q < R; q++) s += cb[q] * Binv[q * R + r]; y[r] = s; }
                         // price existing columns (Dantzig)
@@ -2253,8 +2392,27 @@
                         basis[lr] = enter;
                         work += R * R * 2;
                     }
-                    if (converged) { let obj = 0; for (let r = 0; r < R; r++) obj += cols[basis[r]].c * xB[r]; if (k === 1) lpBoundBars = Math.ceil(obj - 1e-6); }
-                    work = lpStart + (work - lpStart) / 3;
+                    // Lower bound from a dual CERTIFICATE, not from the simplex objective: the simplex works with an explicit basis
+                    // inverse whose rounding errors can accumulate over thousands of pivots, and a bound that is even slightly
+                    // too high would wrongly "prove" a worse plan optimal. Any non-negative y gives a valid bound by weak duality
+                    // (it is re-checked here against the exact pricing knapsack), so drift in y can only make the bound weaker.
+                    {
+                        const yd = new Float64Array(m);
+                        let dy = 0;
+                        for (let i = 0; i < m; i++) { yd[i] = Math.max(0, y[i]); dy += d[i] * yd[i]; }
+                        const zs = lens.map(L => knap(capOf(L), yd).val);
+                        // A: scale y until the best pattern of some bar length is exactly worth its cost (availability then drops out)
+                        let sc = Infinity; for (let j = 0; j < k; j++) if (zs[j] > 1e-12) sc = Math.min(sc, cost[j] / zs[j]);
+                        let D = isFinite(sc) ? sc * dy : 0;
+                        // B: keep y, pay for availability with u_j = min(0, cost_j - z_j)
+                        let DB = dy; for (let j = 0; j < k; j++) DB += avail[j] * Math.min(0, cost[j] - zs[j]);
+                        D = Math.max(D, DB);
+                        if (isFinite(D) && D > 0) {
+                            if (k === 1) lpBoundBars = Math.max(lpBoundBars, Math.ceil(D - 1e-6));
+                            lpLenBound = D * Lmax * (1 - 1e-9);
+                        }
+                    }
+                    work = lpStart + Math.min((work - lpStart) / 3, 5e7);   // LP has its own time cap; don't starve the local search
                     // artificials still positive => LP says stock is insufficient; skip
                     for (let r = 0; r < R; r++) if (basis[r] < m && xB[r] > 1e-6) return [];
                     const sol = [];
@@ -2309,32 +2467,112 @@
                 // pieces from scratch, keep the result only if it is strictly better.
                 if (best.left === 0 && best.bars.length > 1) {
                     const lbBars = lens.length === 1 ? Math.max(lpBoundBars, Math.ceil(types.reduce((x, t) => x + t * groups.get(t).length, 0) / capOf(lens[0]))) : 0;
-                    let stall = 0, lastYield = performance.now();
-                    while (work < WORK_TOTAL && !outOfTime() && stall < STALL_LIMIT && !(lbBars && best.bars.length <= lbBars && best.score[3] <= 1)) {
-                        if (DEEP && performance.now() - lastYield > 150) {   // let the page repaint / accept the Stop click
+                    // cur = the solution being modified; best = best ever seen. Moves that keep the same stock length and bar
+                    // count but change the pattern mix are accepted sometimes (plateau walk), and the amount of the plan that is
+                    // torn up grows while the search is stuck, so it can leave local optima. cur restarts from best now and then.
+                    let stall = 0, iter = 0, lastYield = performance.now(), cur = best;
+                    // Phase 1 is exactly the normal search. Deep search then continues from that result with a much bigger
+                    // budget (plus plateau walk / wider ruin), so Deep can only match or beat the normal result.
+                    for (let phase = 1; phase <= (DEEP ? 2 : 1); phase++) {
+                    const workCap = phase === 1 ? 6e8 : WORK_TOTAL, stallCap = phase === 1 ? 1000 : STALL_LIMIT;
+                    stall = 0; cur = best;
+                    while (work < workCap && !outOfTime() && stall < stallCap && !(lbBars && best.bars.length <= lbBars && best.score[3] <= 1)) {
+                        if (performance.now() - lastYield > 150) {   // let the page repaint / accept the Stop click
                             lastYield = performance.now();
                             if (angleDeepTick) angleDeepTick();
                             await new Promise(r => setTimeout(r, 0));
                         }
-                        const bars = best.bars;
-                        const m = Math.min(bars.length, 2 + Math.floor(rand() * 4));
+                        iter++;
+                        if (iter % 400 === 0 && cur !== best) cur = best;
+                        const bars = cur.bars;
+                        const widen = phase === 2 ? Math.min(6, Math.floor(stall / 150)) : 0;   // only Deep search tears up more when stuck
+                        const m = Math.min(bars.length, 2 + Math.floor(rand() * (4 + widen)));
                         const order = bars.map((b, i) => [i, capOf(b.st.originalLength) - fillOf(b)]).sort((x, y) => y[1] - x[1]);
                         const idx = new Set([order[Math.floor(rand() * Math.max(1, Math.ceil(order.length * 0.4)))][0]]);
                         while (idx.size < m) idx.add(Math.floor(rand() * bars.length));
                         const kept = bars.filter((_, i) => !idx.has(i)), removed = bars.filter((_, i) => idx.has(i));
                         const counts = types.map(() => 0);
                         removed.forEach(b => b.take.forEach((q, i) => counts[i] += q));
-                        let improved = false;
+                        let improved = false, moved = false;
                         for (let tr = 0; tr < 3 && !improved; tr++) {
-                            const pool = new Map([...best.pool].map(([L, arr]) => [L, arr.slice()]));
+                            const pool = new Map([...cur.pool].map(([L, arr]) => [L, arr.slice()]));
                             removed.forEach(b => pool.get(b.st.originalLength).push(b.st));
                             const r = construct(counts, pool, tr === 2 ? { anchor: false, repeat: rand() < 0.5 } : { anchor: true, jitter: true, repeat: rand() < 0.4 });
                             if (r.left !== 0) continue;
                             downsize(r.bars, pool);
                             const cand = kept.concat(r.bars), sc = scoreOf(cand, 0);
-                            if (better(sc, best.score)) { best = { bars: cand, left: 0, pool, score: sc }; improved = true; }
+                            if (better(sc, best.score)) { best = { bars: cand, left: 0, pool, score: sc }; cur = best; improved = true; }
+                            else if (phase === 2 && !moved && sc[1] === cur.score[1] && sc[2] === cur.score[2] && rand() < 0.3) { cur = { bars: cand, left: 0, pool, score: sc }; moved = true; }
                         }
                         stall = improved ? 0 : stall + 1;
+                    }
+                    }
+                }
+
+                // Stage 2b: bin elimination (exchange moves) until it stops finding a bar to remove or the bound is reached.
+                if (best.left === 0 && best.bars.length > 1) {
+                    const lbB = lens.length === 1 ? Math.max(lpBoundBars, Math.ceil(types.reduce((x, t) => x + t * groups.get(t).length, 0) / capOf(lens[0]))) : 0;
+                    const WORK_B = work + (DEEP ? 3e9 : 4e8), FAIL_CAP = DEEP ? 4000 : 500;
+                    let fails = 0, lastYield2 = performance.now();
+                    while (work < WORK_B && !outOfTime() && fails < FAIL_CAP && best.bars.length > 1 && !(lbB && best.bars.length <= lbB)) {
+                        if (performance.now() - lastYield2 > 150) {
+                            lastYield2 = performance.now();
+                            if (angleDeepTick) angleDeepTick();
+                            await new Promise(r => setTimeout(r, 0));
+                        }
+                        const r = eliminate(best.bars);
+                        if (r) {
+                            const pool = new Map([...best.pool].map(([L, arr]) => [L, arr.slice()]));
+                            pool.get(r.removed.originalLength).push(r.removed);
+                            downsize(r.bars, pool);
+                            const sc = scoreOf(r.bars, 0);
+                            if (better(sc, best.score)) { best = { bars: r.bars, left: 0, pool, score: sc }; fails = 0; continue; }
+                        }
+                        fails++;
+                    }
+                }
+
+                // Stage 2c: exact repack. Take a few bars (the emptiest plus random others), and ask whether their pieces fit
+                // into one bar fewer. Each success removes a bar (or shorter total stock length).
+                if (best.left === 0 && best.bars.length > 2) {
+                    const lbR = lens.length === 1 ? Math.max(lpBoundBars, Math.ceil(types.reduce((x, t) => x + t * groups.get(t).length, 0) / capOf(lens[0]))) : 0;
+                    const WORK_R = work + (DEEP ? 4e9 : 6e8), FAIL_R = DEEP ? 6000 : 700;
+                    let fails = 0, lastYield3 = performance.now();
+                    while (work < WORK_R && !outOfTime() && fails < FAIL_R && best.bars.length > 2 && !(lbR && best.bars.length <= lbR)) {
+                        if (performance.now() - lastYield3 > 150) {
+                            lastYield3 = performance.now();
+                            if (angleDeepTick) angleDeepTick();
+                            await new Promise(r => setTimeout(r, 0));
+                        }
+                        const bars = best.bars, n = bars.length;
+                        // The plan can only lose a bar if the chosen bars hold at least one bar's worth of free space together,
+                        // so take the bars with the most free space (noisy ranking), plus a few random ones to shuffle pieces with.
+                        const M = Math.min(n, Math.round(4 * Math.pow(1.12, fails / 20)) + Math.floor(rand() * 3));   // grows while stuck, up to the whole plan
+                        const ord = bars.map((b, i) => [i, (capOf(b.st.originalLength) - fillOf(b)) / capOf(b.st.originalLength) + rand() * (rand() < 0.5 ? 0.02 : 0.15)]).sort((a, b) => b[1] - a[1]);
+                        const victim = ord[Math.floor(rand() * Math.min(3, ord.length))][0];
+                        const chosen = new Set(ord.slice(0, M).map(e => e[0]));
+                        const swaps = Math.floor(rand() * 3);
+                        for (let q = 0; q < swaps && chosen.size > 2; q++) {
+                            const out = [...chosen].filter(i => i !== victim);
+                            chosen.delete(out[Math.floor(rand() * out.length)]);
+                            chosen.add(Math.floor(rand() * n));
+                        }
+                        chosen.add(victim);
+                        const keepIdx = [...chosen].filter(i => i !== victim);
+                        const counts = types.map(() => 0);
+                        chosen.forEach(i => bars[i].take.forEach((q, t) => counts[t] += q));
+                        const res = packExact(counts, keepIdx.map(i => capOf(bars[i].st.originalLength)), Math.min(DEEP ? 400000 : 150000, (DEEP ? 20000 : 6000) + 4000 * M));
+                        if (res) {
+                            const rest = bars.filter((_, i) => !chosen.has(i));
+                            const nb = keepIdx.map((i, q) => ({ st: bars[i].st, take: res[q] }));
+                            const pool = new Map([...best.pool].map(([L, arr]) => [L, arr.slice()]));
+                            pool.get(bars[victim].st.originalLength).push(bars[victim].st);
+                            const cand = rest.concat(nb);
+                            downsize(cand, pool);
+                            const sc = scoreOf(cand, 0);
+                            if (better(sc, best.score)) { best = { bars: cand, left: 0, pool, score: sc }; fails = 0; continue; }
+                        }
+                        fails++;
                     }
                 }
 
@@ -2347,7 +2585,13 @@
                         let lb = Math.ceil(sumW / capOf(lens[0]) - 1e-9);
                         if (lens.length === 1) lb = Math.max(lb, lpBoundBars);
                         angleBoundAcc.bound += lb; angleBoundAcc.sizes++;
-                        if (lens.length > 1) angleBoundAcc.loose = true;
+                        if (lens.length === 1) angleBoundAcc.lenBound += lb * lens[0];
+                        else {
+                            angleBoundAcc.loose = true;
+                            // total stock length can never be below the LP optimum, and must be a total the available bars can add up to
+                            if (lpLenBound > 0) angleBoundAcc.lenBound += achievableLength(lpLenBound * (Q > 1 ? 0.999 : 1));
+                            else angleBoundAcc.lenUnknown = true;
+                        }
                     } else angleBoundAcc.incomplete = true;
                 }
 
@@ -2810,13 +3054,13 @@
                     });
                 }
 
-                renderAngleBoundInfo(mode, usedStock.length, unmetDemand.length);
+                renderAngleBoundInfo(mode, usedStock.length, unmetDemand.length, usedStock.reduce((x, st) => x + st.originalLength, 0));
                 displayUnmetDemand(unmetDemand, mode);
                 outputSection.classList.remove('hidden');
                 downloadBtn.classList.remove('hidden');
             }
 
-            function renderAngleBoundInfo(mode, usedBars, unmetCount) {
+            function renderAngleBoundInfo(mode, usedBars, unmetCount, usedLength) {
                 const el = document.getElementById('bound-info');
                 if (!el) return;
                 const a = angleBoundAcc;
@@ -2824,17 +3068,31 @@
                 const prev = lastAngleBars;
                 lastAngleBars = unmetCount === 0 ? usedBars : null;
                 if (!a || !a.sizes || a.incomplete || unmetCount > 0 || !a.bound) { el.classList.add('hidden'); return; }
-                const gap = usedBars - a.bound;
-                let html = `Lower bound: <b>${a.bound}</b> bars &middot; this plan uses <b>${usedBars}</b> bars. `;
-                if (gap <= 0) html += 'This is the fewest bars possible, so no plan can do better on bar count.';
-                else html += `It is ${gap} bar${gap > 1 ? 's' : ''} above the bound, so fewer bars <i>may</i> be possible (the bound is not always reachable).`;
-                if (a.loose) html += ' Several stock lengths are in use, so this bound is approximate and can be lower than the true minimum.';
+                const m = v => (v / 1000).toFixed(2) + ' m';
+                let html, optimal;
+                if (!a.loose) {
+                    // every section size has one stock length: the bound is a number of bars
+                    const gap = usedBars - a.bound;
+                    optimal = gap <= 0;
+                    html = `Lower bound: <b>${a.bound}</b> bars &middot; this plan uses <b>${usedBars}</b> bars. `;
+                    html += optimal ? 'This is the fewest bars possible, so no plan can do better on bar count.'
+                        : `It is ${gap} bar${gap > 1 ? 's' : ''} above the bound, so fewer bars <i>may</i> be possible (the bound is not always reachable).`;
+                } else if (!a.lenUnknown && a.lenBound > 0) {
+                    // several stock lengths: compare total stock length (the main goal), bound rounded to a total the bars can really make
+                    const gap = usedLength - a.lenBound;
+                    optimal = gap <= 1e-6;
+                    html = `Lower bound: <b>${m(a.lenBound)}</b> of stock &middot; this plan uses <b>${m(usedLength)}</b> (${usedBars} bars). `;
+                    html += optimal ? 'No plan can use less stock than this, so this plan is optimal.'
+                        : `It is ${m(gap)} above the bound, so a little less stock <i>may</i> be possible (the bound is not always reachable).`;
+                } else {
+                    el.classList.add('hidden'); return;
+                }
                 if (angleDeepSearch) {
                     if (prev != null && usedBars < prev) html += ` <b>Deep search saved ${prev - usedBars} bar${prev - usedBars > 1 ? 's' : ''} (${prev} &rarr; ${usedBars}).</b>`;
                     else html += ' Deep search found no further reduction.';
                 }
                 el.innerHTML = html;
-                el.classList.toggle('optimal', gap <= 0);
+                el.classList.toggle('optimal', !!optimal);
                 el.classList.remove('hidden');
             }
 
