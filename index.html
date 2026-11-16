@@ -1141,5 +1141,33 @@
         });
     })();
     </script>
+
+<script>
+// Plate mode: show plate-format examples in the shared input boxes (the app itself never sets placeholders).
+(function () {
+    var cut = document.getElementById('bulk-cut-pieces-input');
+    var stock = document.getElementById('bulk-stock-angles-input');
+    var appBody = document.getElementById('app-body');
+    if (!cut || !stock || !appBody) return;
+    var angleCut = cut.getAttribute('placeholder');
+    var angleStock = stock.getAttribute('placeholder');
+    var plateCut = 'Plate Example: (Thickness Width Length MarkNo Qty Operation)\n10 200 500 PC-101 5 Plasma';
+    var plateStock = 'Plate Example: (Thickness Width Length Qty)\n10 1500 6000 2';
+    function apply() {
+        if (appBody.classList.contains('mode-plate')) {
+            cut.setAttribute('placeholder', plateCut);
+            stock.setAttribute('placeholder', plateStock);
+        } else {
+            cut.setAttribute('placeholder', angleCut);
+            stock.setAttribute('placeholder', angleStock);
+        }
+    }
+    ['angle-optimization-btn', 'plate-optimization-btn'].forEach(function (id) {
+        var b = document.getElementById(id);
+        if (b) b.addEventListener('click', function () { setTimeout(apply, 60); });
+    });
+    apply();
+})();
+</script>
 </body>
 </html>
