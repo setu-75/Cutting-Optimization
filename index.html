@@ -655,8 +655,9 @@
         .im-note.im-error { color: var(--danger); }
         .im-note.im-ok { color: var(--success); }
     
-        /* Input sections: Required Cut Pieces wider, Available Stock narrower. */
-        @media (min-width: 1024px) { .params-rest { grid-template-columns: 1.2fr 0.8fr !important; } }
+        /* Input sections: the two cards live in the outer params grid (their wrapper is
+           display:contents), so widen Required Cut Pieces there: 20% / 48% / 32%. */
+        @media (min-width: 1024px) { .params-grid.params-grid { grid-template-columns: 1fr 2.4fr 1.6fr !important; } }
     </style>
 </head>
 <body id="app-body" class="mode-angle">
