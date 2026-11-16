@@ -279,9 +279,16 @@
             transition: border-color 0.2s ease, transform 0.2s ease;
             overflow: hidden;
             border-radius: 4px;
-            isolation: isolate; animation: dev-info-flip 60s ease-in-out infinite; }
-        @keyframes dev-info-flip { 0% { transform: perspective(700px) rotateY(0deg); } 5% { transform: perspective(700px) rotateY(360deg); } 100% { transform: perspective(700px) rotateY(360deg); } }
-        @media (prefers-reduced-motion: reduce) { .developer-info { animation: none; } }
+            isolation: isolate; }
+        /* Nameplate flip wave: invisible segments behind the text flip one after another in a wave; no tile boxes or borders are shown. */
+        .detail-tiles { position: absolute; inset: 0; z-index: 0; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(3, 1fr); perspective: 400px; }
+        .detail-tile { position: relative; transform-style: preserve-3d; animation: detail-tile-flip 60s linear infinite; animation-delay: calc(var(--i) * 0.35s); }
+        .detail-tile::before, .detail-tile::after { content: ""; position: absolute; inset: 0; backface-visibility: hidden; }
+        .detail-tile::before { background: transparent; }
+        .detail-tile::after { background-color: var(--accent); opacity: 0.25; transform: rotateY(180deg); }
+        @keyframes detail-tile-flip { 0%, 3% { transform: rotateY(0deg); } 5%, 100% { transform: rotateY(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .detail-tile { animation: none; } }
+        
         .developer-info:hover {
             border-color: var(--accent-dark);
             transform: translateX(-3px);
@@ -674,6 +681,23 @@
 <line x1="18.04" y1="14.98" x2="18.04" y2="44.98" stroke="#9FE7FF" stroke-width="1.1" stroke-linecap="round" stroke-dasharray="2.2 2.2" opacity="0.95"/>
 <line x1="28.04" y1="9.43" x2="28.04" y2="39.42" stroke="#9FE7FF" stroke-width="1.1" stroke-linecap="round" stroke-dasharray="2.2 2.2" opacity="0.95"/></g></svg><span id="main-title-text">Angle Cutting Optimizer</span></h1>
             <div class="developer-info">
+            <div class="detail-tiles" aria-hidden="true">
+                <div class="detail-tile" style="--i:0"></div>
+                <div class="detail-tile" style="--i:1"></div>
+                <div class="detail-tile" style="--i:2"></div>
+                <div class="detail-tile" style="--i:3"></div>
+                <div class="detail-tile" style="--i:4"></div>
+                <div class="detail-tile" style="--i:5"></div>
+                <div class="detail-tile" style="--i:6"></div>
+                <div class="detail-tile" style="--i:7"></div>
+                <div class="detail-tile" style="--i:8"></div>
+                <div class="detail-tile" style="--i:9"></div>
+                <div class="detail-tile" style="--i:10"></div>
+                <div class="detail-tile" style="--i:11"></div>
+                <div class="detail-tile" style="--i:12"></div>
+                <div class="detail-tile" style="--i:13"></div>
+                <div class="detail-tile" style="--i:14"></div>
+            </div>
                 <p class="font-semibold">MD. Rofikuzzaman</p>
                 <p>Assistant Engineer(Production Planning)</p>
                 <p>Global Steel And Engineering LTD.</p>
