@@ -654,6 +654,9 @@
         .im-note { font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-dim); }
         .im-note.im-error { color: var(--danger); }
         .im-note.im-ok { color: var(--success); }
+    
+        /* Input sections: Required Cut Pieces wider, Available Stock narrower. */
+        @media (min-width: 1024px) { .params-rest { grid-template-columns: 1.2fr 0.8fr !important; } }
     </style>
 </head>
 <body id="app-body" class="mode-angle">
@@ -1036,7 +1039,10 @@ function _0x5d09(_0x3be1cb,_0xeebfe){_0x3be1cb=_0x3be1cb-(0x83*-0x17+-0x259a+0x3
             panel.className = "im-panel";
             panel.style.display = "none";
             ta.parentNode.insertBefore(toggle, ta.nextSibling);
-            ta.parentNode.insertBefore(panel, toggle.nextSibling);
+            var noteEl = document.createElement("p");
+            noteEl.className = "im-note";
+            ta.parentNode.insertBefore(noteEl, toggle.nextSibling);
+            ta.parentNode.insertBefore(panel, noteEl.nextSibling);
 
             function render() {
                 panel.innerHTML = "";
@@ -1094,9 +1100,6 @@ function _0x5d09(_0x3be1cb,_0xeebfe){_0x3be1cb=_0x3be1cb-(0x83*-0x17+-0x259a+0x3
                 });
                 table.appendChild(tbody);
                 panel.appendChild(table);
-                var noteEl = document.createElement("p");
-                noteEl.className = "im-note";
-                panel.appendChild(noteEl);
                 var apply = document.createElement("button");
                 apply.type = "button";
                 apply.className = "btn btn-primary";
@@ -1113,6 +1116,7 @@ function _0x5d09(_0x3be1cb,_0xeebfe){_0x3be1cb=_0x3be1cb-(0x83*-0x17+-0x259a+0x3
                     ta.value = res.text;
                     noteEl.textContent = "Mapping applied to " + res.rows + " row(s). Now press Optimize Cutting Plan.";
                     noteEl.className = "im-note im-ok";
+                    panel.style.display = "none";
                 });
                 panel.appendChild(apply);
             }
