@@ -284,8 +284,8 @@
         .detail-tiles { position: absolute; inset: 0; z-index: 0; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(3, 1fr); perspective: 400px; }
         .detail-tile { position: relative; transform-style: preserve-3d; animation: detail-tile-flip 60s linear infinite; animation-delay: calc(var(--i) * 0.35s); }
         .detail-tile::before, .detail-tile::after { content: ""; position: absolute; inset: 0; backface-visibility: hidden; }
-        .detail-tile::before { background-color: var(--panel-2); }
-        .detail-tile::after { background-color: var(--accent); opacity: 0.18; transform: rotateY(180deg); }
+        .detail-tile::before { background: transparent; }
+        .detail-tile::after { background-color: var(--accent); opacity: 0.25; transform: rotateY(180deg); }
         @keyframes detail-tile-flip { 0%, 3% { transform: rotateY(0deg); } 5%, 100% { transform: rotateY(360deg); } }
         @media (prefers-reduced-motion: reduce) { .detail-tile { animation: none; } }
         
