@@ -643,6 +643,17 @@
         .developer-info { font-size: 0.9rem; }
         .lp-note { color: var(--text-dim); font-size: 0.95rem; }
         th, td { padding: 0.8rem 1rem; }
+    
+        /* Inline column mapping inside the input sections. */
+        .im-toggle { margin-top: 0.6rem; background: transparent; color: var(--text-dim); border: 1px solid var(--border); border-radius: 5px; padding: 0.4rem 0.9rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease; }
+        .im-toggle:hover { border-color: var(--accent); color: var(--text); }
+        .im-panel { margin-top: 0.6rem; background: var(--panel-2); border: 1px solid var(--border-soft); border-radius: 6px; padding: 0.75rem; overflow-x: auto; }
+        .im-panel table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .im-panel th, .im-panel td { border: 1px solid var(--border-soft); padding: 0.35rem 0.5rem; text-align: left; }
+        .im-panel select { background: var(--panel-3); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.25rem; width: 100%; }
+        .im-note { font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-dim); }
+        .im-note.im-error { color: var(--danger); }
+        .im-note.im-ok { color: var(--success); }
     </style>
 </head>
 <body id="app-body" class="mode-angle">
@@ -953,6 +964,174 @@ function _0x5d09(_0x3be1cb,_0xeebfe){_0x3be1cb=_0x3be1cb-(0x83*-0x17+-0x259a+0x3
         normalize("bulk-cut-pieces-input", "cuts");
         normalize("bulk-stock-angles-input", "stock");
     }, true);
+    </script>
+
+    <script>
+    // Inline column mapping: a mapping table inside each input section, so data in
+    // any column order can be pasted or typed and mapped in place, without the popup.
+    (function () {
+        var IM_FIELDS = {
+            cuts: [
+                { value: "size", text: "Angle Size", required: true },
+                { value: "length", text: "Cut Length", required: true },
+                { value: "mark", text: "Mark No.", required: true },
+                { value: "qty", text: "Quantity", required: true },
+                { value: "op", text: "Operation", required: false }
+            ],
+            stock: [
+                { value: "size", text: "Stock Angle Size", required: true },
+                { value: "length", text: "Stock Length", required: true },
+                { value: "qty", text: "Stock Qty", required: true }
+            ]
+        };
+        var IM_DEFAULTS = {
+            cuts: ["size", "length", "mark", "qty", "op"],
+            stock: ["size", "length", "qty"]
+        };
+
+        function imTransform(text, mapping, kind) {
+            var fields = IM_FIELDS[kind];
+            var required = fields.filter(function (f) { return f.required; }).map(function (f) { return f.value; });
+            var seen = {};
+            for (var i = 0; i < mapping.length; i++) {
+                var v = mapping[i];
+                if (!v) continue;
+                if (seen[v]) return { ok: false, error: "The field '" + v + "' is mapped to more than one column." };
+                seen[v] = true;
+            }
+            for (var r = 0; r < required.length; r++) {
+                if (!seen[required[r]]) return { ok: false, error: "Please map all required columns (marked with *)." };
+            }
+            var idx = {};
+            mapping.forEach(function (val, i2) { if (val) idx[val] = i2; });
+            var lines = text.split(/\r?\n/).filter(function (l) { return l.trim() !== ""; });
+            var out = [];
+            lines.forEach(function (line, li) {
+                var parts = line.trim().split(/\s+/);
+                function val(f) { var ix = idx[f]; return ix === undefined ? undefined : parts[ix]; }
+                var len = parseFloat(val("length"));
+                var qty = parseInt(val("qty"), 10);
+                if (li === 0 && (isNaN(len) || isNaN(qty))) return; // header row from Excel
+                if (kind === "cuts") {
+                    out.push([val("size") || "", val("length") || "", val("mark") || "", val("qty") || "", val("op") || ""].join("\t").replace(/\t+$/, ""));
+                } else {
+                    out.push([val("size") || "", val("length") || "", val("qty") || ""].join("\t"));
+                }
+            });
+            if (!out.length) return { ok: false, error: "No data rows found." };
+            var header = kind === "cuts"
+                ? "Angle Size\tCut Length\tMark No.\tQuantity\tOperation"
+                : "Stock Angle Size\tStock Length\tQuantity";
+            return { ok: true, text: header + "\n" + out.join("\n"), rows: out.length };
+        }
+
+        function imBuild(kind, textareaId) {
+            var ta = document.getElementById(textareaId);
+            if (!ta) return;
+            var toggle = document.createElement("button");
+            toggle.type = "button";
+            toggle.className = "im-toggle";
+            toggle.textContent = "Column Mapping";
+            var panel = document.createElement("div");
+            panel.className = "im-panel";
+            panel.style.display = "none";
+            ta.parentNode.insertBefore(toggle, ta.nextSibling);
+            ta.parentNode.insertBefore(panel, toggle.nextSibling);
+
+            function render() {
+                panel.innerHTML = "";
+                if (document.querySelector(".mode-plate")) {
+                    var note = document.createElement("p");
+                    note.className = "im-note";
+                    note.textContent = "Plate mode: paste the data and the mapping window opens automatically.";
+                    panel.appendChild(note);
+                    return;
+                }
+                var lines = ta.value.split(/\r?\n/).filter(function (l) { return l.trim() !== ""; });
+                if (!lines.length) {
+                    var empty = document.createElement("p");
+                    empty.className = "im-note";
+                    empty.textContent = "Paste or type data in the box above first, then open this mapping.";
+                    panel.appendChild(empty);
+                    return;
+                }
+                var sample = lines.slice(0, 5).map(function (l) { return l.trim().split(/\s+/); });
+                var numCols = Math.max.apply(null, sample.map(function (r) { return r.length; }));
+                numCols = Math.min(numCols, 10);
+                var table = document.createElement("table");
+                var thead = document.createElement("thead");
+                var hrow = document.createElement("tr");
+                var selects = [];
+                for (var c = 0; c < numCols; c++) {
+                    var th = document.createElement("th");
+                    var sel = document.createElement("select");
+                    var emptyOpt = document.createElement("option");
+                    emptyOpt.value = "";
+                    emptyOpt.textContent = "Select Field";
+                    sel.appendChild(emptyOpt);
+                    IM_FIELDS[kind].forEach(function (f) {
+                        var o = document.createElement("option");
+                        o.value = f.value;
+                        o.textContent = f.text + (f.required ? " *" : "");
+                        sel.appendChild(o);
+                    });
+                    sel.value = IM_DEFAULTS[kind][c] || "";
+                    selects.push(sel);
+                    th.appendChild(sel);
+                    hrow.appendChild(th);
+                }
+                thead.appendChild(hrow);
+                table.appendChild(thead);
+                var tbody = document.createElement("tbody");
+                sample.forEach(function (row) {
+                    var tr = document.createElement("tr");
+                    for (var c2 = 0; c2 < numCols; c2++) {
+                        var td = document.createElement("td");
+                        td.textContent = row[c2] || "";
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                panel.appendChild(table);
+                var noteEl = document.createElement("p");
+                noteEl.className = "im-note";
+                panel.appendChild(noteEl);
+                var apply = document.createElement("button");
+                apply.type = "button";
+                apply.className = "btn btn-primary";
+                apply.style.marginTop = "0.6rem";
+                apply.textContent = "Apply Mapping";
+                apply.addEventListener("click", function () {
+                    var mapping = selects.map(function (s) { return s.value; });
+                    var res = imTransform(ta.value, mapping, kind);
+                    if (!res.ok) {
+                        noteEl.textContent = res.error;
+                        noteEl.className = "im-note im-error";
+                        return;
+                    }
+                    ta.value = res.text;
+                    noteEl.textContent = "Mapping applied to " + res.rows + " row(s). Now press Optimize Cutting Plan.";
+                    noteEl.className = "im-note im-ok";
+                });
+                panel.appendChild(apply);
+            }
+
+            toggle.addEventListener("click", function () {
+                if (panel.style.display === "none") {
+                    render();
+                    panel.style.display = "block";
+                } else {
+                    panel.style.display = "none";
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            imBuild("cuts", "bulk-cut-pieces-input");
+            imBuild("stock", "bulk-stock-angles-input");
+        });
+    })();
     </script>
 </body>
 </html>
