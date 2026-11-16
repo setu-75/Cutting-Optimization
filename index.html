@@ -284,8 +284,8 @@
         .detail-tiles { position: absolute; inset: 0; z-index: 0; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(3, 1fr); perspective: 400px; }
         .detail-tile { position: relative; transform-style: preserve-3d; animation: detail-tile-flip 60s linear infinite; animation-delay: calc(var(--i) * 0.35s); }
         .detail-tile::before, .detail-tile::after { content: ""; position: absolute; inset: 0; backface-visibility: hidden; }
-        .detail-tile::before { background: transparent; }
-        .detail-tile::after { background-color: var(--accent); opacity: 0.25; transform: rotateY(180deg); }
+        .detail-tile::before { background-color: var(--panel-2); }
+        .detail-tile::after { background-color: var(--accent); opacity: 0.18; transform: rotateY(180deg); }
         @keyframes detail-tile-flip { 0%, 3% { transform: rotateY(0deg); } 5%, 100% { transform: rotateY(360deg); } }
         @media (prefers-reduced-motion: reduce) { .detail-tile { animation: none; } }
         
@@ -625,7 +625,14 @@
             body.print-layouts .lp-legend th, body.print-layouts .lp-legend td { border-color: #999 !important; background: #fff !important; color: #111 !important; }
             body.print-layouts .no-print { display: none !important; }
         }
-</style>
+
+        /* Small polish: accent selection and caret, smooth scrolling, button press feedback, subtle table striping. */
+        ::selection { background: var(--accent); color: var(--accent-text); }
+        input, textarea, select { caret-color: var(--accent); }
+        html { scroll-behavior: smooth; }
+        .btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+        tbody tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.02); }
+    </style>
 </head>
 <body id="app-body" class="mode-angle">
     <div class="tower-backdrop" aria-hidden="true">
