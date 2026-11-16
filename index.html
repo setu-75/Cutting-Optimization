@@ -279,8 +279,9 @@
             transition: border-color 0.2s ease, transform 0.2s ease;
             overflow: hidden;
             border-radius: 4px;
-            isolation: isolate;
-        }
+            isolation: isolate; animation: dev-info-flip 60s ease-in-out infinite; }
+        @keyframes dev-info-flip { 0% { transform: perspective(700px) rotateY(0deg); } 5% { transform: perspective(700px) rotateY(360deg); } 100% { transform: perspective(700px) rotateY(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .developer-info { animation: none; } }
         .developer-info:hover {
             border-color: var(--accent-dark);
             transform: translateX(-3px);
