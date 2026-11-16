@@ -917,5 +917,42 @@ function _0x5d09(_0x3be1cb,_0xeebfe){_0x3be1cb=_0x3be1cb-(0x83*-0x17+-0x259a+0x3
         });
     });
     </script>
+
+    <script>
+    // Manual-entry fix: typed (or pasted-but-unmapped) data in the documented default
+    // format is converted in place to the app header format when Optimize / Deep search
+    // is clicked, so it parses without the mapping step. Malformed lines are left
+    // untouched, so the app still shows its own error instead of dropping data.
+    document.addEventListener("click", function (e) {
+        if (!e.target.closest || !e.target.closest("#optimize-btn, #deep-search-btn")) return;
+        function normalize(textareaId, kind) {
+            var ta = document.getElementById(textareaId);
+            if (!ta || ta.offsetParent === null) return;
+            var trimmed = ta.value.trim();
+            if (!trimmed) return;
+            if (kind === "cuts" && trimmed.indexOf("Angle Size") === 0) return;
+            if (kind === "stock" && trimmed.indexOf("Stock Angle Size") === 0) return;
+            var out = [];
+            var lines = trimmed.split(/\r?\n/);
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].trim() === "") continue;
+                var parts = lines[i].trim().split(/\s+/);
+                if (kind === "cuts") {
+                    if (parts.length < 4) return;
+                    out.push(parts.slice(0, 5).join("\t"));
+                } else {
+                    if (parts.length < 3) return;
+                    out.push(parts.slice(0, 3).join("\t"));
+                }
+            }
+            if (!out.length) return;
+            ta.value = (kind === "cuts"
+                ? "Angle Size\tCut Length\tMark No.\tQuantity\tOperation"
+                : "Stock Angle Size\tStock Length\tQuantity") + "\n" + out.join("\n");
+        }
+        normalize("bulk-cut-pieces-input", "cuts");
+        normalize("bulk-stock-angles-input", "stock");
+    }, true);
+    </script>
 </body>
 </html>
