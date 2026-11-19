@@ -863,7 +863,7 @@
                 <div id="layout-list"></div>
             </div>
         </div>
-        <footer class="site-footer">&copy; 2026 Md. Rofikuzzaman &middot; Angle Cutting Optimizer &middot; Global Steel And Engineering LTD.</footer>
+        <footer class="site-footer">&copy; 2026 Md. Rofikuzzaman &middot; Angle Cutting Optimizer &middot; Global Steel And Engineering LTD. &middot; Build 2026-11-19</footer>
     </div>
 
     <div id="backdrop" class="backdrop"></div>
@@ -1170,5 +1170,94 @@
 })();
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "0710d5742ff1454c9742e59d64d99b03"}'></script><!-- End Cloudflare Web Analytics -->
+
+<!-- Boss Cartoon working indicator (added 2026-11-19, Build 2026-11-19) -->
+<style>
+#boss-cartoon{position:fixed;right:16px;bottom:16px;z-index:99990;display:flex;align-items:flex-end;gap:8px;pointer-events:none;opacity:0;transform:translateY(18px) scale(.92);transition:opacity .25s ease,transform .25s ease;font-family:'Hind Siliguri','Noto Sans Bengali',system-ui,-apple-system,'Segoe UI',sans-serif}
+#boss-cartoon.show{opacity:1;transform:translateY(0) scale(1)}
+#boss-cartoon .bc-bubble{background:#ffffff;color:#14202e;border-radius:14px;padding:10px 14px;max-width:255px;font-size:16.5px;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.38);position:relative;margin-bottom:30px}
+#boss-cartoon .bc-bubble:after{content:'';position:absolute;right:-6px;bottom:18px;width:14px;height:14px;background:#ffffff;transform:rotate(45deg);border-radius:2px}
+#boss-cartoon .bc-dots i{display:inline-block;width:5px;height:5px;margin-left:3px;border-radius:50%;background:#f0a93b;vertical-align:middle;animation:bcBlink 1.1s infinite}
+#boss-cartoon .bc-dots i:nth-child(2){animation-delay:.18s}
+#boss-cartoon .bc-dots i:nth-child(3){animation-delay:.36s}
+#boss-cartoon svg{animation:bcBob 1.7s ease-in-out infinite;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35))}
+#boss-cartoon .bc-armL,#boss-cartoon .bc-armR{transform-box:fill-box;transform-origin:50% 8%}
+#boss-cartoon .bc-armL{animation:bcType .34s ease-in-out infinite alternate}
+#boss-cartoon .bc-armR{animation:bcType .34s ease-in-out .17s infinite alternate-reverse}
+#boss-cartoon .bc-scan{animation:bcScan 1.15s linear infinite}
+#boss-cartoon .bc-eye{transform-box:fill-box;transform-origin:center;animation:bcEye 3.4s infinite}
+#boss-cartoon .bc-ant{animation:bcBlink 1.6s infinite}
+@keyframes bcBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes bcType{from{transform:rotate(7deg)}to{transform:rotate(-11deg)}}
+@keyframes bcBlink{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes bcScan{from{transform:translateX(0)}to{transform:translateX(40px)}}
+@keyframes bcEye{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.12)}}
+@media (prefers-reduced-motion:reduce){#boss-cartoon svg,#boss-cartoon .bc-armL,#boss-cartoon .bc-armR,#boss-cartoon .bc-scan,#boss-cartoon .bc-eye{animation:none}}
+</style>
+<div id="boss-cartoon" aria-hidden="true">
+  <div class="bc-bubble">বস, আমি তোমার কাজ করছি — তুমি একটু অপেক্ষা করো<span class="bc-dots"><i></i><i></i><i></i></span></div>
+  <svg width="116" height="116" viewBox="0 0 120 120" role="img" aria-label="Working cartoon">
+    <line x1="60" y1="24" x2="60" y2="13" stroke="#8fa6bd" stroke-width="3" stroke-linecap="round"/>
+    <circle class="bc-ant" cx="60" cy="10" r="4.5" fill="#f0a93b"/>
+    <rect x="25" y="38" width="7" height="15" rx="3.5" fill="#28405a"/>
+    <rect x="88" y="38" width="7" height="15" rx="3.5" fill="#28405a"/>
+    <rect x="31" y="23" width="58" height="43" rx="13" fill="#1c3149" stroke="#28405a" stroke-width="2"/>
+    <circle class="bc-eye" cx="49" cy="42" r="5.5" fill="#f0a93b"/>
+    <circle class="bc-eye" cx="71" cy="42" r="5.5" fill="#f0a93b"/>
+    <rect x="51" y="55" width="18" height="4.5" rx="2.25" fill="#8fa6bd"/>
+    <rect x="37" y="66" width="46" height="24" rx="9" fill="#16273a" stroke="#28405a" stroke-width="2"/>
+    <circle class="bc-ant" cx="60" cy="78" r="4" fill="#4fae7e"/>
+    <rect class="bc-armL" x="22" y="67" width="11" height="24" rx="5.5" fill="#28405a"/>
+    <rect class="bc-armR" x="87" y="67" width="11" height="24" rx="5.5" fill="#28405a"/>
+    <rect x="35" y="76" width="50" height="21" rx="3" fill="#0b1620" stroke="#f0a93b" stroke-width="1.6"/>
+    <rect x="41" y="81" width="26" height="3" rx="1.5" fill="#f0a93b" opacity=".75"/>
+    <rect x="41" y="86.5" width="18" height="3" rx="1.5" fill="#4fae7e" opacity=".75"/>
+    <rect x="41" y="92" width="22" height="3" rx="1.5" fill="#8fa6bd" opacity=".7"/>
+    <rect class="bc-scan" x="37" y="77.5" width="6" height="18" fill="#ffffff" opacity=".13"/>
+    <rect x="29" y="97" width="62" height="6" rx="3" fill="#0b1620" stroke="#28405a" stroke-width="1.5"/>
+  </svg>
+</div>
+<script>
+(function () {
+    var el = document.getElementById('boss-cartoon');
+    if (!el) return;
+    var shownAt = 0, safety = null;
+    function show() {
+        shownAt = Date.now();
+        el.classList.add('show');
+    }
+    function hide() {
+        if (!el.classList.contains('show')) return;
+        var wait = Math.max(0, 700 - (Date.now() - shownAt));
+        setTimeout(function () { el.classList.remove('show'); }, wait);
+        if (safety) { clearTimeout(safety); safety = null; }
+    }
+    function arm(ms) {
+        if (safety) clearTimeout(safety);
+        safety = setTimeout(hide, ms);
+    }
+    [['optimize-btn', 45000], ['deep-search-btn', 95000]].forEach(function (pair) {
+        var b = document.getElementById(pair[0]);
+        if (b) b.addEventListener('click', function () { show(); arm(pair[1]); }, true);
+    });
+    function resultsReady() {
+        var t = document.getElementById('optimization-results');
+        return !!(t && t.querySelectorAll('tr').length > 1);
+    }
+    var out = document.getElementById('output-section');
+    if (out && window.MutationObserver) {
+        new MutationObserver(function () {
+            if (el.classList.contains('show') && Date.now() - shownAt > 400 && resultsReady()) hide();
+        }).observe(out, { childList: true, subtree: true });
+    }
+    var mb = document.getElementById('messageBox');
+    if (mb && window.MutationObserver) {
+        new MutationObserver(function () {
+            if (el.classList.contains('show') && Date.now() - shownAt > 400 &&
+                window.getComputedStyle(mb).display !== 'none') hide();
+        }).observe(mb, { attributes: true, childList: true, subtree: true });
+    }
+})();
+</script>
 </body>
 </html>
