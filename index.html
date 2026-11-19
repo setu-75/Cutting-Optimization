@@ -1231,6 +1231,7 @@
         var wait = Math.max(0, 700 - (Date.now() - shownAt));
         setTimeout(function () { el.classList.remove('show'); }, wait);
         if (safety) { clearTimeout(safety); safety = null; }
+        stopPoll();
     }
     function arm(ms) {
         if (safety) clearTimeout(safety);
@@ -1238,24 +1239,25 @@
     }
     [['optimize-btn', 45000], ['deep-search-btn', 95000]].forEach(function (pair) {
         var b = document.getElementById(pair[0]);
-        if (b) b.addEventListener('click', function () { show(); arm(pair[1]); }, true);
+        if (b) b.addEventListener('click', function () { show(); arm(pair[1]); startPoll(); }, true);
     });
-    function resultsReady() {
+    var poller = null;
+    function stopPoll() { if (poller) { clearInterval(poller); poller = null; } }
+    function done() {
         var t = document.getElementById('optimization-results');
-        return !!(t && t.querySelectorAll('tr').length > 1);
+        if (t && t.querySelectorAll('tr').length > 1) return true;
+        var s = document.getElementById('total-stock-used');
+        if (s && s.textContent.trim().length > 0) return true;
+        var mb = document.getElementById('messageBox');
+        if (mb && mb.offsetParent !== null && window.getComputedStyle(mb).display !== 'none') return true;
+        return false;
     }
-    var out = document.getElementById('output-section');
-    if (out && window.MutationObserver) {
-        new MutationObserver(function () {
-            if (el.classList.contains('show') && Date.now() - shownAt > 400 && resultsReady()) hide();
-        }).observe(out, { childList: true, subtree: true });
-    }
-    var mb = document.getElementById('messageBox');
-    if (mb && window.MutationObserver) {
-        new MutationObserver(function () {
-            if (el.classList.contains('show') && Date.now() - shownAt > 400 &&
-                window.getComputedStyle(mb).display !== 'none') hide();
-        }).observe(mb, { attributes: true, childList: true, subtree: true });
+    function startPoll() {
+        stopPoll();
+        poller = setInterval(function () {
+            if (!el.classList.contains('show')) { stopPoll(); return; }
+            if (Date.now() - shownAt > 400 && done()) hide();
+        }, 350);
     }
 })();
 </script>
