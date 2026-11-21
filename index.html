@@ -1265,12 +1265,16 @@ select:focus{outline:2px solid rgba(240,169,59,.55);outline-offset:1px}
 #angle-optimization-btn:hover,#plate-optimization-btn:hover,#free-version-btn:hover,#paid-version-btn:hover{transform:translateY(-3px) scale(1.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -2px 0 rgba(0,0,0,.28),0 5px 0 rgba(0,0,0,.35),0 12px 20px rgba(0,0,0,.45)}
 @media (max-width:1024px){.version-switcher{justify-self:center}}
 #d3-badge{position:fixed;left:14px;bottom:14px;z-index:99995;background:linear-gradient(160deg,#ffffff,#fff6e8);color:#14202e;border:1.5px solid rgba(232,147,12,.55);border-radius:999px;padding:7px 14px;font:600 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;box-shadow:0 10px 26px rgba(0,0,0,.45);pointer-events:none}
-.ring-arc{animation:none;stroke-dashoffset:calc(var(--i) * 2.0833)}
+.ring-arc{animation:none}
 .ring-wrap{animation:d3-breathe 7s ease-in-out infinite}
-@keyframes d3-breathe{0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes d3-breathe{0%,100%{opacity:.55}50%{opacity:1}}
 .ring-wrap.d3-busy{animation-duration:1.8s}
 .ring-wrap.d3-busy .ring-glow.glow-wide{opacity:1}
-@media (prefers-reduced-motion: reduce){button,.btn{transition:none}.d3-glare::after{transition:none}.ring-wrap{animation:none}}
+.d3-glowframe{position:absolute;inset:5px;border-radius:10px;border:2px solid transparent;background:conic-gradient(from 0deg,#F0A93B,#FFD27D,#9FE7FF,#4A90C4,#F0A93B) border-box;-webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);mask-composite:exclude;opacity:.85;animation:d3-breathe 7s ease-in-out infinite;pointer-events:none;z-index:0}
+.d3-glowbleed{position:absolute;inset:0;box-shadow:inset 0 0 34px rgba(240,169,59,.20),inset 0 0 60px rgba(90,150,210,.12);opacity:.85;animation:d3-breathe 7s ease-in-out infinite;pointer-events:none;z-index:0}
+body.d3-busy .d3-glowframe{background:conic-gradient(from 0deg,#F0A93B,#FFD27D,#E8930C,#FFAA3C,#F0A93B) border-box;animation-duration:1.8s}
+body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 0 0 70px rgba(240,169,59,.20);animation-duration:1.8s}
+@media (prefers-reduced-motion: reduce){button,.btn{transition:none}.d3-glare::after{transition:none}.ring-wrap{animation:none}.d3-glowframe,.d3-glowbleed{animation:none}}
 </style>
 <script>
 /* ===== 3D vibe (medium): tilt + parallax — appended block 2026-11-21 ===== */
@@ -1314,7 +1318,15 @@ select:focus{outline:2px solid rgba(240,169,59,.55);outline-offset:1px}
     ringArcs.forEach(function(el){
       var i = parseInt(el.style.getPropertyValue("--i") || "0", 10) % 48;
       el.style.color = glowColor(stops, i / 48);
+      el.setAttribute("stroke-dashoffset", (i * 2.0833).toFixed(2));
     });
+  }
+  var cont = document.querySelector(".container");
+  if (cont) {
+    var glowBleed = document.createElement("div"); glowBleed.className = "d3-glowbleed";
+    var glowFrame = document.createElement("div"); glowFrame.className = "d3-glowframe";
+    cont.insertBefore(glowBleed, cont.firstChild);
+    cont.insertBefore(glowFrame, glowBleed.nextSibling);
   }
   paintGlow(GLOW_STOPS);
   var ringWrap = document.querySelector(".ring-wrap");
@@ -1327,6 +1339,7 @@ select:focus{outline:2px solid rgba(240,169,59,.55);outline-offset:1px}
       if (now !== glowBusy) {
         glowBusy = now;
         ringWrap.classList.toggle("d3-busy", now);
+        document.body.classList.toggle("d3-busy", now);
         paintGlow(now ? GLOW_AMBER : GLOW_STOPS);
       }
     }, 300);
