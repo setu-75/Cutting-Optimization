@@ -1265,13 +1265,18 @@ select:focus{outline:2px solid rgba(240,169,59,.55);outline-offset:1px}
 #angle-optimization-btn:hover,#plate-optimization-btn:hover,#free-version-btn:hover,#paid-version-btn:hover{transform:translateY(-3px) scale(1.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -2px 0 rgba(0,0,0,.28),0 5px 0 rgba(0,0,0,.35),0 12px 20px rgba(0,0,0,.45)}
 @media (max-width:1024px){.version-switcher{justify-self:center}}
 #d3-badge{position:fixed;left:14px;bottom:14px;z-index:99995;background:linear-gradient(160deg,#ffffff,#fff6e8);color:#14202e;border:1.5px solid rgba(232,147,12,.55);border-radius:999px;padding:7px 14px;font:600 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;box-shadow:0 10px 26px rgba(0,0,0,.45);pointer-events:none}
-@media (prefers-reduced-motion: reduce){button,.btn{transition:none}.d3-glare::after{transition:none}}
+.ring-arc{animation:none;stroke-dashoffset:calc(var(--i) * 2.0833)}
+.ring-wrap{animation:d3-breathe 7s ease-in-out infinite}
+@keyframes d3-breathe{0%,100%{opacity:.7}50%{opacity:1}}
+.ring-wrap.d3-busy{animation-duration:1.8s}
+.ring-wrap.d3-busy .ring-glow.glow-wide{opacity:1}
+@media (prefers-reduced-motion: reduce){button,.btn{transition:none}.d3-glare::after{transition:none}.ring-wrap{animation:none}}
 </style>
 <script>
 /* ===== 3D vibe (medium): tilt + parallax — appended block 2026-11-21 ===== */
 (function(){
   "use strict";
-  if (location.pathname.indexOf("preview-3d") !== -1) {
+  if (location.pathname.indexOf("preview-") !== -1) {
     var badge = document.createElement("div");
     badge.id = "d3-badge";
     badge.textContent = "3D PREVIEW — live site is unchanged";
@@ -1295,6 +1300,36 @@ select:focus{outline:2px solid rgba(240,169,59,.55);outline-offset:1px}
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
+  }
+  // Glow update 2026-11-21: palette colours + busy pulse (breathing is in CSS)
+  var GLOW_STOPS = [[240,169,59],[255,210,125],[159,231,255],[74,144,196]];
+  var GLOW_AMBER = [[240,169,59],[255,210,125],[232,147,12],[255,170,60]];
+  function glowColor(stops, t){
+    var seg = t * stops.length, k = Math.floor(seg) % stops.length, f = seg - Math.floor(seg);
+    var a = stops[k], b = stops[(k + 1) % stops.length];
+    return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * f) + "," + Math.round(a[1] + (b[1] - a[1]) * f) + "," + Math.round(a[2] + (b[2] - a[2]) * f) + ")";
+  }
+  var ringArcs = document.querySelectorAll(".ring-arc");
+  function paintGlow(stops){
+    ringArcs.forEach(function(el){
+      var i = parseInt(el.style.getPropertyValue("--i") || "0", 10) % 48;
+      el.style.color = glowColor(stops, i / 48);
+    });
+  }
+  paintGlow(GLOW_STOPS);
+  var ringWrap = document.querySelector(".ring-wrap");
+  if (ringWrap && !reduceMotion) {
+    var glowBusy = false;
+    setInterval(function(){
+      var ob = document.getElementById("optimize-btn");
+      var db = document.getElementById("deep-search-btn");
+      var now = !!((ob && ob.disabled) || (db && db.classList.contains("running")));
+      if (now !== glowBusy) {
+        glowBusy = now;
+        ringWrap.classList.toggle("d3-busy", now);
+        paintGlow(now ? GLOW_AMBER : GLOW_STOPS);
+      }
+    }, 300);
   }
   if (reduceMotion || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
   function addTilt(el, maxDeg, glare){
