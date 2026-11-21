@@ -863,7 +863,7 @@
                 <div id="layout-list"></div>
             </div>
         </div>
-        <footer class="site-footer">&copy; 2026 Md. Rofikuzzaman &middot; Angle Cutting Optimizer &middot; Global Steel And Engineering LTD. &middot; Build 2026-11-19</footer>
+        <footer class="site-footer">&copy; 2026 Md. Rofikuzzaman &middot; Angle Cutting Optimizer &middot; Global Steel And Engineering LTD. &middot; Build 2026-11-21</footer>
     </div>
 
     <div id="backdrop" class="backdrop"></div>
@@ -1171,7 +1171,7 @@
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "0710d5742ff1454c9742e59d64d99b03"}'></script><!-- End Cloudflare Web Analytics -->
 
-<!-- Boss Cartoon working indicator (Muse-style character, added 2026-11-19, Build 2026-11-19) -->
+<!-- Boss Cartoon working indicator (Muse-style character, added 2026-11-19, Build 2026-11-21) -->
 <style>
 #boss-cartoon{position:fixed;inset:0;z-index:99990;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(5,11,18,0);opacity:0;transition:opacity .25s ease,background .25s ease;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
 #boss-cartoon.show{opacity:1;background:rgba(5,11,18,.38)}
@@ -1239,6 +1239,86 @@
             if (Date.now() - shownAt > 2500) hide();
         }, 200);
     }
+})();
+</script>
+
+<style>
+/* ===== 3D vibe (medium): depth + tilt + parallax — appended block 2026-11-21 ===== */
+.d3-bg{position:fixed;inset:-18% -10%;pointer-events:none;z-index:0;will-change:transform}
+.d3-bg-a{background:radial-gradient(600px 420px at 18% 12%,rgba(240,169,59,.10),transparent 65%),radial-gradient(700px 500px at 85% 30%,rgba(64,120,190,.10),transparent 65%)}
+.d3-bg-b{background:radial-gradient(520px 380px at 75% 78%,rgba(240,169,59,.07),transparent 65%),radial-gradient(640px 460px at 12% 85%,rgba(80,170,140,.06),transparent 65%)}
+.container{position:relative;z-index:1}
+.params-grid>div,.summary-card,.developer-info{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 -1px 0 rgba(0,0,0,.35),0 18px 36px rgba(0,0,0,.42),0 4px 10px rgba(0,0,0,.30)}
+.d3-tilt{transform-style:preserve-3d;will-change:transform}
+.d3-glare{position:relative;overflow:hidden}
+.d3-glare::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.13),transparent 45%);opacity:0;transition:opacity .25s ease}
+.d3-glare:hover::after{opacity:1}
+.btn{transition:transform .08s ease,box-shadow .18s ease}
+.btn:active{transform:translateY(2px) scale(.99)}
+#d3-badge{position:fixed;left:14px;bottom:14px;z-index:99995;background:linear-gradient(160deg,#ffffff,#fff6e8);color:#14202e;border:1.5px solid rgba(232,147,12,.55);border-radius:999px;padding:7px 14px;font:600 13px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;box-shadow:0 10px 26px rgba(0,0,0,.45);pointer-events:none}
+@media (prefers-reduced-motion: reduce){.btn{transition:none}.d3-glare::after{transition:none}}
+</style>
+<script>
+/* ===== 3D vibe (medium): tilt + parallax — appended block 2026-11-21 ===== */
+(function(){
+  "use strict";
+  if (location.pathname.indexOf("preview-3d") !== -1) {
+    var badge = document.createElement("div");
+    badge.id = "d3-badge";
+    badge.textContent = "3D PREVIEW — live site is unchanged";
+    document.body.appendChild(badge);
+  }
+  var layerA = document.createElement("div"); layerA.className = "d3-bg d3-bg-a";
+  var layerB = document.createElement("div"); layerB.className = "d3-bg d3-bg-b";
+  document.body.insertBefore(layerA, document.body.firstChild);
+  document.body.insertBefore(layerB, layerA.nextSibling);
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!reduceMotion) {
+    var ticking = false;
+    function onScroll(){
+      if (ticking) return; ticking = true;
+      requestAnimationFrame(function(){
+        var y = window.scrollY || 0;
+        layerA.style.transform = "translate3d(0," + (y * 0.10).toFixed(1) + "px,0)";
+        layerB.style.transform = "translate3d(0," + (y * -0.05).toFixed(1) + "px,0)";
+        ticking = false;
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+  if (reduceMotion || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  function addTilt(el, maxDeg, glare){
+    if (!el) return;
+    el.classList.add("d3-tilt");
+    if (glare) el.classList.add("d3-glare");
+    var raf = null, flat = false, cx = 0, cy = 0;
+    el.addEventListener("focusin", function(){ flat = true; el.style.transform = ""; });
+    el.addEventListener("focusout", function(e){ if (!el.contains(e.relatedTarget)) flat = false; });
+    el.addEventListener("pointermove", function(e){
+      if (flat || e.pointerType !== "mouse") return;
+      cx = e.clientX; cy = e.clientY;
+      if (raf) return;
+      raf = requestAnimationFrame(function(){
+        raf = null;
+        var r = el.getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        var px = (cx - r.left) / r.width, py = (cy - r.top) / r.height;
+        var rx = (0.5 - py) * 2 * maxDeg, ry = (px - 0.5) * 2 * maxDeg;
+        el.style.transform = "perspective(900px) rotateX(" + rx.toFixed(2) + "deg) rotateY(" + ry.toFixed(2) + "deg)";
+        el.style.setProperty("--mx", (px * 100).toFixed(1) + "%");
+        el.style.setProperty("--my", (py * 100).toFixed(1) + "%");
+      });
+    });
+    el.addEventListener("pointerleave", function(){
+      el.style.transition = "transform .35s ease";
+      el.style.transform = "";
+      setTimeout(function(){ el.style.transition = ""; }, 380);
+    });
+  }
+  addTilt(document.querySelector(".developer-info"), 5, true);
+  document.querySelectorAll(".summary-card").forEach(function(el){ addTilt(el, 5, true); });
+  document.querySelectorAll(".params-grid > div").forEach(function(el){ addTilt(el, 2, false); });
 })();
 </script>
 </body>
