@@ -1545,24 +1545,24 @@ body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 
     var branches = [], nb = 3 + Math.floor(Math.random() * 3), i;
     for (i = 0; i < nb; i++) {
       branches.push({ at: 0.38 + 0.55 * (nb === 1 ? 0 : i / (nb - 1)) + (Math.random() * 0.06 - 0.03),
-                      side: i % 2 ? 1 : -1, len: 16 + Math.random() * 22, ang: 0.55 + Math.random() * 0.45,
+                      side: i % 2 ? 1 : -1, len: 30 + Math.random() * 30, ang: 0.55 + Math.random() * 0.45,
                       growOff: 0.10 + i * 0.035 });
     }
-    var flowers = [{ br: -1, size: 6.5 + Math.random() * 3, col: FLOWER_COLS[Math.floor(Math.random() * FLOWER_COLS.length)], off: Math.random() * 0.05, shed: 0.70 + Math.random() * 0.16, dropped: false }];
+    var flowers = [{ br: -1, size: 9.5 + Math.random() * 4, col: FLOWER_COLS[Math.floor(Math.random() * FLOWER_COLS.length)], off: Math.random() * 0.05, shed: 0.70 + Math.random() * 0.16, dropped: false }];
     branches.forEach(function(b, bi){
-      if (Math.random() < 0.85) flowers.push({ br: bi, size: 5 + Math.random() * 3, col: FLOWER_COLS[Math.floor(Math.random() * FLOWER_COLS.length)], off: Math.random() * 0.05, shed: 0.70 + Math.random() * 0.16, dropped: false });
+      if (Math.random() < 0.85) flowers.push({ br: bi, size: 7.5 + Math.random() * 3.5, col: FLOWER_COLS[Math.floor(Math.random() * FLOWER_COLS.length)], off: Math.random() * 0.05, shed: 0.70 + Math.random() * 0.16, dropped: false });
     });
     var leaves = [];
     branches.forEach(function(b, bi){
       [0.45, 0.75].forEach(function(fr){
-        leaves.push({ br: bi, f: fr, size: 5 + Math.random() * 3.5, col: LEAF_GREENS[Math.floor(Math.random() * LEAF_GREENS.length)], rot: Math.random() * 1.2 - 0.6, off: Math.random() * 0.08, shed: 0.72 + Math.random() * 0.16, dropped: false });
+        leaves.push({ br: bi, f: fr, size: 7 + Math.random() * 5, col: LEAF_GREENS[Math.floor(Math.random() * LEAF_GREENS.length)], rot: Math.random() * 1.2 - 0.6, off: Math.random() * 0.08, shed: 0.72 + Math.random() * 0.16, dropped: false });
       });
     });
     [0.55, 0.8].forEach(function(fr){
-      leaves.push({ br: -1, f: fr, size: 5 + Math.random() * 3.5, col: LEAF_GREENS[Math.floor(Math.random() * LEAF_GREENS.length)], rot: Math.random() * 1.2 - 0.6, off: Math.random() * 0.08, shed: 0.72 + Math.random() * 0.16, dropped: false });
+      leaves.push({ br: -1, f: fr, size: 7 + Math.random() * 5, col: LEAF_GREENS[Math.floor(Math.random() * LEAF_GREENS.length)], rot: Math.random() * 1.2 - 0.6, off: Math.random() * 0.08, shed: 0.72 + Math.random() * 0.16, dropped: false });
     });
-    return { x: x, h: 74 + Math.random() * 78, bend: (Math.random() * 16 - 8), branches: branches,
-             flowers: flowers, leaves: leaves, born: born, dur: 34000 + Math.random() * 14000,
+    return { x: x, h: 150 + Math.random() * 110, bend: (Math.random() * 16 - 8), branches: branches,
+             flowers: flowers, leaves: leaves, born: born, dur: 300000 + Math.random() * 20000,
              swayPh: Math.random() * 6.28 };
   }
   function stemPoint(p, f, sway){
@@ -1624,17 +1624,17 @@ body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 
     var dt = lastT ? Math.min(50, now - lastT) : 16;
     lastT = now;
     ctx.clearRect(0, 0, W, H);
-    var grd = ctx.createLinearGradient(0, H - 120, 0, H);
+    var grd = ctx.createLinearGradient(0, H - 210, 0, H);
     grd.addColorStop(0, "rgba(79,174,126,0)");
     grd.addColorStop(1, "rgba(79,174,126,0.10)");
-    ctx.fillStyle = grd; ctx.fillRect(0, H - 120, W, 120);
+    ctx.fillStyle = grd; ctx.fillRect(0, H - 210, W, 210);
     plants.forEach(function(p, pi){
       var a = (now - p.born) / p.dur;
       if (a >= 1) { plants[pi] = makePlant(p.x + (Math.random() * 40 - 20), now); return; }
       var alpha = Math.min(smooth(a / 0.04), smooth((1 - a) / 0.07)) * 0.85;
       var sway = Math.sin(now / 1600 + p.swayPh);
       var stemGrow = smooth(a / 0.26);
-      ctx.strokeStyle = "#3E7C4F"; ctx.globalAlpha = alpha; ctx.lineWidth = 2.4; ctx.lineCap = "round";
+      ctx.strokeStyle = "#3E7C4F"; ctx.globalAlpha = alpha; ctx.lineWidth = 3.4; ctx.lineCap = "round";
       ctx.beginPath();
       var steps = Math.max(2, Math.floor(14 * stemGrow));
       for (var s2 = 0; s2 <= steps; s2++) {
@@ -1646,7 +1646,7 @@ body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 
         var bg = smooth((a - b.growOff) / 0.20);
         if (bg <= 0) return;
         var be = branchEnd(p, b, sway);
-        ctx.lineWidth = 1.6;
+        ctx.lineWidth = 2.2;
         ctx.beginPath(); ctx.moveTo(be.sx, be.sy);
         ctx.lineTo(be.sx + (be.x - be.sx) * bg, be.sy + (be.y - be.sy) * bg);
         ctx.stroke();
