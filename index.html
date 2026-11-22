@@ -1280,7 +1280,7 @@ body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 
 
 /* ===== Creative pack (2026-11-22): progress, sparks, trail, burst, shine, theme ===== */
 #d3-progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#f44336,#ff9800,#ffee58,#4caf50,#2196f3,#9c27b0);z-index:99991;pointer-events:none}
-#d3-sparks{position:fixed;inset:0;z-index:0;pointer-events:none}
+#d3-garden{position:fixed;inset:0;z-index:0;pointer-events:none}
 .d3-trail{position:fixed;width:10px;height:10px;margin:-5px 0 0 -5px;pointer-events:none;z-index:99990;border-radius:1px}
 .d3-burst{position:fixed;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;pointer-events:none;z-index:99992}
 #main-title.d3-shine{position:relative;overflow:hidden}
@@ -1485,7 +1485,7 @@ body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 
 </script>
 
 <script>
-/* ===== Creative pack (2026-11-22): theme switch, progress bar, welding sparks, cursor trail, magnetic buttons, success burst, title shine ===== */
+/* ===== Creative pack (2026-11-22): theme switch, progress bar, garden cycle, cursor trail, magnetic buttons, success burst, title shine ===== */
 (function(){
   "use strict";
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1533,40 +1533,160 @@ body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 
   if (reduceMotion) return;
   var title = document.getElementById("main-title");
   if (title) title.classList.add("d3-shine");
-  var cv = document.createElement("canvas"); cv.id = "d3-sparks";
+  var cv = document.createElement("canvas"); cv.id = "d3-garden";
   document.body.insertBefore(cv, document.body.firstChild);
   var ctx = cv.getContext("2d");
-  var W = 0, H = 0, parts = [];
-  function sizeCanvas(){ W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+  var W = 0, H = 0, plants = [], falling = [];
+  var LEAF_GREENS = ["#4FAE7E", "#5FBF8F", "#3E9B6C", "#6FCF97"];
+  var FLOWER_COLS = ["#F2A7C3", "#F6C667", "#F28B82", "#C3A6F2", "#FDFDFD"];
+  function clamp01(v){ return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function smooth(v){ v = clamp01(v); return v * v * (3 - 2 * v); }
+  function makePlant(x, born){
+    var branches = [], nb = 3 + Math.floor(Math.random() * 3), i;
+    for (i = 0; i < nb; i++) {
+      branches.push({ at: 0.38 + 0.55 * (nb === 1 ? 0 : i / (nb - 1)) + (Math.random() * 0.06 - 0.03),
+                      side: i % 2 ? 1 : -1, len: 16 + Math.random() * 22, ang: 0.55 + Math.random() * 0.45,
+                      growOff: 0.10 + i * 0.035 });
+    }
+    var flowers = [{ br: -1, size: 6.5 + Math.random() * 3, col: FLOWER_COLS[Math.floor(Math.random() * FLOWER_COLS.length)], off: Math.random() * 0.05, shed: 0.70 + Math.random() * 0.16, dropped: false }];
+    branches.forEach(function(b, bi){
+      if (Math.random() < 0.85) flowers.push({ br: bi, size: 5 + Math.random() * 3, col: FLOWER_COLS[Math.floor(Math.random() * FLOWER_COLS.length)], off: Math.random() * 0.05, shed: 0.70 + Math.random() * 0.16, dropped: false });
+    });
+    var leaves = [];
+    branches.forEach(function(b, bi){
+      [0.45, 0.75].forEach(function(fr){
+        leaves.push({ br: bi, f: fr, size: 5 + Math.random() * 3.5, col: LEAF_GREENS[Math.floor(Math.random() * LEAF_GREENS.length)], rot: Math.random() * 1.2 - 0.6, off: Math.random() * 0.08, shed: 0.72 + Math.random() * 0.16, dropped: false });
+      });
+    });
+    [0.55, 0.8].forEach(function(fr){
+      leaves.push({ br: -1, f: fr, size: 5 + Math.random() * 3.5, col: LEAF_GREENS[Math.floor(Math.random() * LEAF_GREENS.length)], rot: Math.random() * 1.2 - 0.6, off: Math.random() * 0.08, shed: 0.72 + Math.random() * 0.16, dropped: false });
+    });
+    return { x: x, h: 74 + Math.random() * 78, bend: (Math.random() * 16 - 8), branches: branches,
+             flowers: flowers, leaves: leaves, born: born, dur: 34000 + Math.random() * 14000,
+             swayPh: Math.random() * 6.28 };
+  }
+  function stemPoint(p, f, sway){
+    return { x: p.x + p.bend * f * f + sway * f * f * 14, y: H - 4 - f * p.h };
+  }
+  function branchEnd(p, b, sway){
+    var s = stemPoint(p, b.at, sway);
+    return { sx: s.x, sy: s.y, x: s.x + b.side * Math.cos(b.ang) * b.len, y: s.y - Math.sin(b.ang) * b.len };
+  }
+  function leafPos(p, l, sway){
+    if (l.br === -1) return stemPoint(p, l.f, sway);
+    var be = branchEnd(p, p.branches[l.br], sway);
+    return { x: be.sx + (be.x - be.sx) * l.f, y: be.sy + (be.y - be.sy) * l.f };
+  }
+  function flowerPos(p, f, sway){
+    if (f.br === -1) return stemPoint(p, 1, sway);
+    var be = branchEnd(p, p.branches[f.br], sway);
+    return { x: be.x, y: be.y };
+  }
+  function drawLeafShape(x, y, size, rot, col, alpha){
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.globalAlpha = alpha;
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(size * 0.7, -size * 0.55, size * 1.5, 0);
+    ctx.quadraticCurveTo(size * 0.7, size * 0.55, 0, 0);
+    ctx.fill(); ctx.restore();
+  }
+  function drawFlowerShape(x, y, size, col, alpha){
+    ctx.save(); ctx.translate(x, y); ctx.globalAlpha = alpha;
+    ctx.fillStyle = col;
+    for (var k = 0; k < 5; k++) {
+      var a2 = k * 1.2566;
+      ctx.beginPath(); ctx.arc(Math.cos(a2) * size * 0.62, Math.sin(a2) * size * 0.62, size * 0.52, 0, 6.2832); ctx.fill();
+    }
+    ctx.fillStyle = "#F6C667";
+    ctx.beginPath(); ctx.arc(0, 0, size * 0.34, 0, 6.2832); ctx.fill();
+    ctx.restore();
+  }
+  function layoutPlants(now){
+    plants = []; falling = [];
+    var n = Math.max(3, Math.min(7, Math.floor(W / 230)));
+    for (var i = 0; i < n; i++) {
+      var x = (i + 0.5) * (W / n) + (Math.random() * 60 - 30);
+      plants.push(makePlant(x, now - Math.random() * 20000));
+    }
+  }
+  function sizeCanvas(){
+    W = cv.width = window.innerWidth; H = cv.height = window.innerHeight;
+    layoutPlants(performance.now());
+  }
   sizeCanvas();
   window.addEventListener("resize", sizeCanvas);
-  var COLORS = ["240,169,59", "255,210,125", "255,240,200", "232,147,12"];
-  function spawn(){
-    return { x: Math.random() * W, y: H + 6, r: 0.8 + Math.random() * 1.7,
-             vy: 0.35 + Math.random() * 0.85, sway: Math.random() * Math.PI * 2,
-             sp: 0.008 + Math.random() * 0.02, life: 0, max: 260 + Math.random() * 220,
-             c: COLORS[Math.floor(Math.random() * COLORS.length)] };
-  }
-  for (var i = 0; i < 34; i++) { var p0 = spawn(); p0.y = Math.random() * H; p0.life = Math.random() * p0.max; parts.push(p0); }
-  var sparksOn = true;
-  document.addEventListener("visibilitychange", function(){ sparksOn = !document.hidden; if (sparksOn) requestAnimationFrame(sparkFrame); });
-  function sparkFrame(){
-    if (!sparksOn) return;
+  var gardenOn = true, lastT = 0;
+  document.addEventListener("visibilitychange", function(){ gardenOn = !document.hidden; if (gardenOn) { lastT = 0; requestAnimationFrame(gardenFrame); } });
+  function gardenFrame(now){
+    if (!gardenOn) return;
+    var dt = lastT ? Math.min(50, now - lastT) : 16;
+    lastT = now;
     ctx.clearRect(0, 0, W, H);
-    for (var j = 0; j < parts.length; j++) {
-      var p = parts[j];
-      p.life++; p.sway += p.sp; p.y -= p.vy; p.x += Math.sin(p.sway) * 0.35;
-      var fade = 1 - p.life / p.max;
-      if (p.life >= p.max || p.y < -8) { parts[j] = spawn(); continue; }
-      var tw = 0.55 + 0.45 * Math.sin(p.life * 0.35 + p.sway * 3);
+    var grd = ctx.createLinearGradient(0, H - 120, 0, H);
+    grd.addColorStop(0, "rgba(79,174,126,0)");
+    grd.addColorStop(1, "rgba(79,174,126,0.10)");
+    ctx.fillStyle = grd; ctx.fillRect(0, H - 120, W, 120);
+    plants.forEach(function(p, pi){
+      var a = (now - p.born) / p.dur;
+      if (a >= 1) { plants[pi] = makePlant(p.x + (Math.random() * 40 - 20), now); return; }
+      var alpha = Math.min(smooth(a / 0.04), smooth((1 - a) / 0.07)) * 0.85;
+      var sway = Math.sin(now / 1600 + p.swayPh);
+      var stemGrow = smooth(a / 0.26);
+      ctx.strokeStyle = "#3E7C4F"; ctx.globalAlpha = alpha; ctx.lineWidth = 2.4; ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, 6.2832);
-      ctx.fillStyle = "rgba(" + p.c + "," + (0.5 * fade * tw).toFixed(3) + ")";
-      ctx.fill();
+      var steps = Math.max(2, Math.floor(14 * stemGrow));
+      for (var s2 = 0; s2 <= steps; s2++) {
+        var pt = stemPoint(p, stemGrow * (s2 / steps), sway);
+        if (s2 === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.stroke();
+      p.branches.forEach(function(b){
+        var bg = smooth((a - b.growOff) / 0.20);
+        if (bg <= 0) return;
+        var be = branchEnd(p, b, sway);
+        ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(be.sx, be.sy);
+        ctx.lineTo(be.sx + (be.x - be.sx) * bg, be.sy + (be.y - be.sy) * bg);
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+      p.leaves.forEach(function(l){
+        if (l.dropped) return;
+        var sc = smooth((a - 0.16 - l.off) / 0.12);
+        if (sc <= 0) return;
+        var pos = leafPos(p, l, sway);
+        if (a >= l.shed) {
+          l.dropped = true;
+          falling.push({ kind: "leaf", x: pos.x, y: pos.y, size: l.size, col: l.col, rot: l.rot, vr: (Math.random() - 0.5) * 1.6, vy: 24 + Math.random() * 16, ph: Math.random() * 6.28, alpha: alpha });
+          return;
+        }
+        drawLeafShape(pos.x, pos.y, l.size * sc, l.rot + sway * 0.15, l.col, alpha);
+      });
+      p.flowers.forEach(function(f){
+        if (f.dropped) return;
+        var sc = smooth((a - 0.34 - f.off) / 0.14);
+        if (sc <= 0) return;
+        var pos = flowerPos(p, f, sway);
+        if (a >= f.shed) {
+          f.dropped = true;
+          falling.push({ kind: "flower", x: pos.x, y: pos.y, size: f.size, col: f.col, rot: 0, vr: (Math.random() - 0.5) * 2.2, vy: 20 + Math.random() * 14, ph: Math.random() * 6.28, alpha: alpha });
+          return;
+        }
+        drawFlowerShape(pos.x, pos.y, f.size * sc, f.col, alpha);
+      });
+    });
+    for (var fi = falling.length - 1; fi >= 0; fi--) {
+      var it = falling[fi];
+      it.ph += dt / 480; it.y += it.vy * dt / 1000; it.x += Math.sin(it.ph) * 0.55; it.rot += it.vr * dt / 1000;
+      if (it.y > H - 8) it.alpha -= dt / 900;
+      if (it.alpha <= 0 || it.y > H + 12) { falling.splice(fi, 1); continue; }
+      if (it.kind === "leaf") drawLeafShape(it.x, it.y, it.size, it.rot, it.col, Math.max(0, it.alpha));
+      else drawFlowerShape(it.x, it.y, it.size, it.col, Math.max(0, it.alpha));
     }
-    requestAnimationFrame(sparkFrame);
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(gardenFrame);
   }
-  requestAnimationFrame(sparkFrame);
+  requestAnimationFrame(gardenFrame);
   if (!finePointer) return;
   var lastTrail = 0, trailCount = 0, hue = 0;
   document.addEventListener("pointermove", function(e){
