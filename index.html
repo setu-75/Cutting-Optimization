@@ -1438,7 +1438,7 @@ body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 
         var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
         var dx = cx - mx, dy = cy - my, d = Math.sqrt(dx * dx + dy * dy);
         if (d < RADIUS) {
-          var hue = Math.round((hueBase + (cx + cy) * 0.35) % 360);
+          var hue = Math.round((hueBase + Math.atan2(dy, dx) * 57.2958 + d * 0.9) % 360);
           s.style.color = "hsl(" + hue + ",95%,68%)";
           colored.add(s);
         } else if (colored.has(s)) {
