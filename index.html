@@ -1381,82 +1381,94 @@ body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 
 })();
 </script>
 <script>
-/* ===== Rainbow hover text — input panels only, animated (appended 2026-11-22) ===== */
+/* ===== Rainbow hover text — everywhere except results/output, animated (appended 2026-11-22) ===== */
 (function(){
   "use strict";
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-  var RADIUS = 140;
-  var panels = Array.prototype.slice.call(document.querySelectorAll(".params-grid .bg-gray-800"));
-  if (!panels.length) return;
+  var RADIUS = 140, CELL = 160;
   var SKIP = { INPUT: 1, TEXTAREA: 1, SELECT: 1, OPTION: 1, SCRIPT: 1, STYLE: 1, SVG: 1, PATH: 1 };
-  function insideSkip(node, root){
+  var EXCLUDE_SEL = "#output-section,.summary-card,#bound-info,#unmet-demand-message,#boss-cartoon,#d3-badge";
+  function skipTag(node){
     var p = node.parentNode;
-    while (p && p !== root) { if (SKIP[p.nodeName]) return true; p = p.parentNode; }
+    while (p && p !== document.body) { if (SKIP[p.nodeName]) return true; p = p.parentNode; }
     return false;
   }
-  var panelChars = panels.map(function(panel){
-    var texts = [];
-    var walker = document.createTreeWalker(panel, NodeFilter.SHOW_TEXT, {
-      acceptNode: function(n){
-        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_SKIP;
-        return insideSkip(n, panel) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
-      }
-    });
-    var n;
-    while ((n = walker.nextNode())) texts.push(n);
-    var spans = [];
-    texts.forEach(function(tn){
-      var frag = document.createDocumentFragment();
-      tn.nodeValue.split("").forEach(function(ch){
-        if (ch === " " || ch === "\t" || ch === "\n") { frag.appendChild(document.createTextNode(ch)); return; }
-        var s = document.createElement("span");
-        s.className = "rb-ch";
-        s.textContent = ch;
-        frag.appendChild(s);
-        spans.push(s);
-      });
-      tn.parentNode.replaceChild(frag, tn);
-    });
-    return spans;
+  var texts = [];
+  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(n){
+      if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_SKIP;
+      if (skipTag(n)) return NodeFilter.FILTER_REJECT;
+      var el = n.parentElement;
+      if (el && el.closest(EXCLUDE_SEL)) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
   });
-  var colored = new Set();
-  function clearAll(){
-    colored.forEach(function(s){ s.style.color = ""; });
-    colored.clear();
+  var tn;
+  while ((tn = walker.nextNode())) texts.push(tn);
+  var allSpans = [];
+  texts.forEach(function(t){
+    var frag = document.createDocumentFragment();
+    t.nodeValue.split("").forEach(function(ch){
+      if (ch === " " || ch === "\t" || ch === "\n") { frag.appendChild(document.createTextNode(ch)); return; }
+      var s = document.createElement("span");
+      s.className = "rb-ch";
+      s.textContent = ch;
+      frag.appendChild(s);
+      allSpans.push(s);
+    });
+    t.parentNode.replaceChild(frag, t);
+  });
+  if (!allSpans.length) return;
+  var grid = new Map();
+  function rebuild(){
+    grid = new Map();
+    allSpans.forEach(function(s){
+      var r = s.getBoundingClientRect();
+      if (!r.width && !r.height) return;
+      var x = r.left + r.width / 2 + window.scrollX, y = r.top + r.height / 2 + window.scrollY;
+      var k = Math.floor(x / CELL) + "," + Math.floor(y / CELL);
+      if (!grid.has(k)) grid.set(k, []);
+      grid.get(k).push({ s: s, x: x, y: y });
+    });
   }
-  var mx = -9999, my = -9999, running = false;
+  rebuild();
+  setTimeout(rebuild, 1000);
+  window.addEventListener("resize", rebuild);
+  var clickTimer = null;
+  document.addEventListener("click", function(){ clearTimeout(clickTimer); clickTimer = setTimeout(rebuild, 400); });
+  var colored = new Set();
+  function clearAll(){ colored.forEach(function(s){ s.style.color = ""; }); colored.clear(); }
+  var mcx = -9999, mcy = -9999, running = false;
   function frame(now){
     if (!running) return;
     var hueBase = (now / 20) % 360;
-    panels.forEach(function(panel, pi){
-      var pr = panel.getBoundingClientRect();
-      if (mx < pr.left - RADIUS || mx > pr.right + RADIUS || my < pr.top - RADIUS || my > pr.bottom + RADIUS) return;
-      panelChars[pi].forEach(function(s){
-        var r = s.getBoundingClientRect();
-        if (!r.width && !r.height) return;
-        var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-        var dx = cx - mx, dy = cy - my, d = Math.sqrt(dx * dx + dy * dy);
+    var mdx = mcx + window.scrollX, mdy = mcy + window.scrollY;
+    var ccx = Math.floor(mdx / CELL), ccy = Math.floor(mdy / CELL);
+    var seen = new Set();
+    for (var gx = ccx - 1; gx <= ccx + 1; gx++) for (var gy = ccy - 1; gy <= ccy + 1; gy++) {
+      var cell = grid.get(gx + "," + gy);
+      if (!cell) continue;
+      cell.forEach(function(o){
+        var dx = o.x - mdx, dy = o.y - mdy, d = Math.sqrt(dx * dx + dy * dy);
         if (d < RADIUS) {
           var hue = Math.round((hueBase + Math.atan2(dy, dx) * 57.2958 + d * 0.9) % 360);
-          s.style.color = "hsl(" + hue + ",95%,68%)";
-          colored.add(s);
-        } else if (colored.has(s)) {
-          s.style.color = "";
-          colored.delete(s);
+          o.s.style.color = "hsl(" + hue + ",95%,68%)";
+          colored.add(o.s); seen.add(o.s);
         }
       });
-    });
+    }
+    colored.forEach(function(s){ if (!seen.has(s)) { s.style.color = ""; colored.delete(s); } });
     requestAnimationFrame(frame);
   }
   document.addEventListener("pointermove", function(e){
     if (e.pointerType !== "mouse") return;
-    mx = e.clientX; my = e.clientY;
+    mcx = e.clientX; mcy = e.clientY;
     if (!running) { running = true; requestAnimationFrame(frame); }
   }, { passive: true });
-  document.addEventListener("pointerleave", function(){ mx = -9999; my = -9999; running = false; clearAll(); });
-  document.addEventListener("mouseleave", function(){ mx = -9999; my = -9999; running = false; clearAll(); });
-  window.addEventListener("blur", function(){ running = false; clearAll(); });
+  function stopAll(){ running = false; clearAll(); }
+  document.addEventListener("mouseleave", stopAll);
+  window.addEventListener("blur", stopAll);
 })();
 </script>
 </body>
