@@ -1606,7 +1606,9 @@ body.d3-busy .d3-glowbleed{box-shadow:inset 0 0 44px rgba(240,169,59,.45),inset 
     var n = Math.max(3, Math.min(7, Math.floor(W / 230)));
     for (var i = 0; i < n; i++) {
       var x = (i + 0.5) * (W / n) + (Math.random() * 60 - 30);
-      plants.push(makePlant(x, now - Math.random() * 20000));
+      var pl = makePlant(x, now);
+      pl.born = now - Math.random() * pl.dur;
+      plants.push(pl);
     }
   }
   function sizeCanvas(){
